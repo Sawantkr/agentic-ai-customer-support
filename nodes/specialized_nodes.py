@@ -40,8 +40,10 @@ def general_support(state: SupportState) -> dict:
 def fallback_support(state: SupportState) -> dict:
     return {
         "response": (
-            "Sorry, I could not determine the type of support you need. "
-            "Please provide more details about your request."
+            "I'm not sure which type of support you need yet. "
+            "I can help with billing and payments, technical issues, "
+            "account access and passwords, or general product questions. "
+            "Please describe your issue in a little more detail."
         ),
         "escalation_required": False,
     }
