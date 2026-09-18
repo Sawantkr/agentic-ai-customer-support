@@ -1,23 +1,86 @@
-from langchain_core.vectorstores import InMemoryVectorStore
+from pathlib import Path
+from collections import Counter
+import math
+import re
+
+from langchain_core.documents import Document
 
 from rag.loader import load_documents, split_documents
 
 
-_embedding_model = None
 _vector_store = None
 
 
-def get_embeddings():
-    global _embedding_model
+def _tokenize(text: str) -> list[str]:
+    return re.findall(r"\b[a-zA-Z0-9]+\b", text.lower())
 
-    if _embedding_model is None:
-        from langchain_huggingface import HuggingFaceEmbeddings
 
-        _embedding_model = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+def _build_vector(document: Document) -> Counter:
+    return Counter(_tokenize(document.page_content))
+
+
+def _cosine_similarity(
+    query_vector: Counter,
+    document_vector: Counter,
+) -> float:
+    if not query_vector or not document_vector:
+        return 0.0
+
+    common_terms = set(query_vector) & set(document_vector)
+
+    dot_product = sum(
+        query_vector[term] * document_vector[term]
+        for term in common_terms
+    )
+
+    query_magnitude = math.sqrt(
+        sum(value * value for value in query_vector.values())
+    )
+
+    document_magnitude = math.sqrt(
+        sum(value * value for value in document_vector.values())
+    )
+
+    if query_magnitude == 0 or document_magnitude == 0:
+        return 0.0
+
+    return dot_product / (query_magnitude * document_magnitude)
+
+
+class LightweightVectorStore:
+    def __init__(self, documents: list[Document]):
+        self.documents = documents
+        self.vectors = [_build_vector(document) for document in documents]
+
+    def similarity_search(
+        self,
+        query: str,
+        k: int = 2,
+    ) -> list[Document]:
+        query_vector = Counter(_tokenize(query))
+
+        scored_documents = []
+
+        for document, document_vector in zip(
+            self.documents,
+            self.vectors,
+        ):
+            score = _cosine_similarity(
+                query_vector,
+                document_vector,
+            )
+
+            scored_documents.append((score, document))
+
+        scored_documents.sort(
+            key=lambda item: item[0],
+            reverse=True,
         )
 
-    return _embedding_model
+        return [
+            document
+            for score, document in scored_documents[:k]
+        ]
 
 
 def build_vector_store():
@@ -26,10 +89,7 @@ def build_vector_store():
     documents = load_documents()
     chunks = split_documents(documents)
 
-    embeddings = get_embeddings()
-
-    _vector_store = InMemoryVectorStore(embeddings)
-    _vector_store.add_documents(chunks)
+    _vector_store = LightweightVectorStore(chunks)
 
     return _vector_store
 

@@ -1,7 +1,5 @@
 langgraph
 langchain-text-splitters
-langchain-huggingface
-sentence-transformers
 langgraph-checkpoint-sqlite
 langgraph-checkpoint-postgres
 langchain-groq
