@@ -1,4 +1,5 @@
 langgraph
+langchain-text-splitterslangchain-text-splitters
 langgraph-checkpoint-sqlite
 langgraph-checkpoint-postgres
 langchain-groq
