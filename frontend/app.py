@@ -31,8 +31,7 @@ st.set_page_config(
 # SESSION STATE
 # ============================================================
 
-def initialize_session_state() -> None:
-
+def initialize_session_state():
     if "thread_id" not in st.session_state:
         st.session_state.thread_id = (
             f"customer-{uuid.uuid4().hex[:8]}"
@@ -53,11 +52,10 @@ def initialize_session_state() -> None:
 # ============================================================
 
 def submit_support_request(
-    api_url: str,
-    thread_id: str,
-    message: str,
-) -> dict:
-
+    api_url,
+    thread_id,
+    message,
+):
     response = requests.post(
         f"{api_url.rstrip('/')}/support",
         json={
@@ -73,11 +71,10 @@ def submit_support_request(
 
 
 def resume_support_request(
-    api_url: str,
-    thread_id: str,
-    human_response: str,
-) -> dict:
-
+    api_url,
+    thread_id,
+    human_response,
+):
     response = requests.post(
         f"{api_url.rstrip('/')}/support/resume",
         json={
@@ -96,8 +93,7 @@ def resume_support_request(
 # CONVERSATION FUNCTIONS
 # ============================================================
 
-def start_new_conversation() -> None:
-
+def start_new_conversation():
     st.session_state.thread_id = (
         f"customer-{uuid.uuid4().hex[:8]}"
     )
@@ -110,10 +106,9 @@ def start_new_conversation() -> None:
 
 
 def process_customer_message(
-    customer_message: str,
-    api_url: str,
-) -> None:
-
+    customer_message,
+    api_url,
+):
     st.session_state.messages.append(
         {
             "role": "user",
@@ -122,11 +117,9 @@ def process_customer_message(
     )
 
     try:
-
         with st.spinner(
             "Processing support request..."
         ):
-
             result = submit_support_request(
                 api_url=api_url,
                 thread_id=st.session_state.thread_id,
@@ -176,20 +169,29 @@ initialize_session_state()
 with st.sidebar:
 
     # --------------------------------------------------------
-    # Sawantflix Branding
+    # SAWANTFLIX LOGO
     # --------------------------------------------------------
 
-    st.title("🎬 SAWANTFLIX")
-
-    st.caption(
-        "Customer Support Agent"
+    st.markdown(
+        '<div style="text-align:center; padding:12px 0 18px 0;">'
+        '<div style="font-size:30px; font-weight:900; '
+        'letter-spacing:-1px; line-height:1.1;">'
+        '<span style="color:#e50914;">SAWANT</span>'
+        '<span style="color:#ffffff;">FLIX</span>'
+        '</div>'
+        '<div style="font-size:13px; color:#aaaaaa; '
+        'margin-top:6px;">'
+        'Customer Support Agent'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
     st.divider()
 
 
     # --------------------------------------------------------
-    # Conversation
+    # CONVERSATION
     # --------------------------------------------------------
 
     st.subheader("Conversation")
@@ -198,14 +200,11 @@ with st.sidebar:
         st.session_state.thread_id
     )
 
-
     if st.button(
         "Start New Conversation",
         use_container_width=True,
     ):
-
         start_new_conversation()
-
         st.rerun()
 
 
@@ -213,7 +212,7 @@ with st.sidebar:
 
 
     # --------------------------------------------------------
-    # API Connection
+    # API CONNECTION
     # --------------------------------------------------------
 
     st.subheader("API Connection")
@@ -225,7 +224,7 @@ with st.sidebar:
 
 
     # --------------------------------------------------------
-    # Back to Sawantflix
+    # SAWANTFLIX LINK
     # --------------------------------------------------------
 
     st.link_button(
@@ -243,7 +242,7 @@ with st.sidebar:
 
 
     # --------------------------------------------------------
-    # Help
+    # HELP
     # --------------------------------------------------------
 
     st.info(
@@ -254,35 +253,55 @@ with st.sidebar:
 
 
 # ============================================================
-# SAWANTFLIX SUPPORT HEADER
+# MAIN SAWANTFLIX BRANDING
 # ============================================================
 
-st.header(
-    "🎬 Sawantflix Customer Support"
+st.markdown(
+    '<div style="text-align:center; padding:8px 0 4px 0;">'
+    '<div style="font-size:38px; font-weight:900; '
+    'letter-spacing:-1.5px; line-height:1.1;">'
+    '<span style="color:#e50914;">SAWANT</span>'
+    '<span style="color:#ffffff;">FLIX</span>'
+    '</div>'
+    '<div style="font-size:18px; font-weight:600; '
+    'color:#aaaaaa; margin-top:7px;">'
+    'Customer Support'
+    '</div>'
+    '</div>',
+    unsafe_allow_html=True,
 )
 
-st.write(
-    "Welcome to the official AI customer support "
-    "service for Sawantflix."
+
+st.markdown(
+    '<div style="text-align:center; color:#aaaaaa; '
+    'font-size:14px; margin-bottom:18px;">'
+    'Official AI support for your Sawantflix experience.'
+    '</div>',
+    unsafe_allow_html=True,
 )
 
-st.caption(
-    "Get help with your account, subscriptions, "
-    "payments, streaming issues and more."
+
+# ------------------------------------------------------------
+# OPEN SAWANTFLIX
+# ------------------------------------------------------------
+
+button_col_left, button_col, button_col_right = st.columns(
+    [1, 1, 1]
 )
 
-
-st.link_button(
-    "Open Sawantflix ↗",
-    SAWANTFLIX_URL,
-)
+with button_col:
+    st.link_button(
+        "🎬 Open Sawantflix ↗",
+        SAWANTFLIX_URL,
+        use_container_width=True,
+    )
 
 
 st.divider()
 
 
 # ============================================================
-# MAIN AGENT HEADING
+# CUSTOMER SUPPORT AGENT
 # ============================================================
 
 st.title(
@@ -356,13 +375,11 @@ if st.session_state.waiting_for_human:
             ),
         )
 
-
         diagnostic_result = (
             interrupt_data.get(
                 "diagnostic_result"
             )
         )
-
 
         if diagnostic_result:
 
@@ -484,7 +501,7 @@ if not st.session_state.waiting_for_human:
 
 
     # --------------------------------------------------------
-    # Duplicate Charge
+    # DUPLICATE CHARGE
     # --------------------------------------------------------
 
     with col1:
@@ -500,7 +517,7 @@ if not st.session_state.waiting_for_human:
 
 
     # --------------------------------------------------------
-    # Reset Password
+    # RESET PASSWORD
     # --------------------------------------------------------
 
     with col2:
@@ -516,7 +533,7 @@ if not st.session_state.waiting_for_human:
 
 
     # --------------------------------------------------------
-    # Account Locked
+    # ACCOUNT LOCKED
     # --------------------------------------------------------
 
     with col3:
@@ -532,7 +549,7 @@ if not st.session_state.waiting_for_human:
 
 
     # --------------------------------------------------------
-    # Technical Issue
+    # TECHNICAL ISSUE
     # --------------------------------------------------------
 
     with col4:
@@ -548,7 +565,7 @@ if not st.session_state.waiting_for_human:
 
 
     # --------------------------------------------------------
-    # Pricing
+    # PRICING
     # --------------------------------------------------------
 
     with col5:
@@ -573,7 +590,7 @@ if not st.session_state.waiting_for_human:
 
 
     # --------------------------------------------------------
-    # Normal Chat Message
+    # NORMAL CHAT
     # --------------------------------------------------------
 
     if customer_message:
@@ -587,7 +604,7 @@ if not st.session_state.waiting_for_human:
 
 
     # --------------------------------------------------------
-    # Quick Support Message
+    # QUICK SUPPORT MESSAGE
     # --------------------------------------------------------
 
     if selected_message:
