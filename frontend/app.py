@@ -5,6 +5,9 @@ import requests
 import streamlit as st
 
 
+SAWANTFLIX_URL = "https://sawantflix-app-1.onrender.com"
+
+
 if "API_URL" in st.secrets:
     DEFAULT_API_URL = st.secrets["API_URL"]
 else:
@@ -15,11 +18,118 @@ else:
 
 
 st.set_page_config(
-    page_title="Customer Support Agent",
+    page_title="Sawantflix Customer Support",
     page_icon="🎧",
-    layout="centered",
+    layout="wide",
 )
 
+
+# -----------------------------
+# Custom UI Styling
+# -----------------------------
+
+st.markdown(
+    """
+    <style>
+        .support-banner {
+            border: 1px solid #ff2d55;
+            border-radius: 14px;
+            padding: 18px 22px;
+            margin-bottom: 28px;
+            background: linear-gradient(
+                135deg,
+                rgba(255,45,85,0.12),
+                rgba(20,20,30,0.35)
+            );
+        }
+
+        .support-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .support-banner-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .support-banner-text {
+            font-size: 15px;
+            opacity: 0.8;
+        }
+
+        .sawantflix-name {
+            color: #ff2d55;
+        }
+
+        .sawantflix-button {
+            display: inline-block;
+            background: #ff2d55;
+            color: white !important;
+            text-decoration: none !important;
+            padding: 12px 22px;
+            border-radius: 9px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sawantflix-button:hover {
+            background: #e51f47;
+            color: white !important;
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            padding: 10px 0 20px 0;
+        }
+
+        .sidebar-brand-title {
+            font-size: 25px;
+            font-weight: 800;
+            color: #ff2d55;
+        }
+
+        .sidebar-brand-subtitle {
+            font-size: 14px;
+            opacity: 0.75;
+        }
+
+        .back-card {
+            border: 1px solid #ff2d55;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            background: rgba(255,45,85,0.08);
+        }
+
+        .back-card-title {
+            font-weight: 700;
+            font-size: 17px;
+        }
+
+        .back-card-text {
+            font-size: 13px;
+            opacity: 0.75;
+            margin-top: 5px;
+        }
+
+        .help-text {
+            font-size: 13px;
+            opacity: 0.75;
+            line-height: 1.5;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# -----------------------------
+# Session State
+# -----------------------------
 
 def initialize_session_state() -> None:
     if "thread_id" not in st.session_state:
@@ -37,6 +147,10 @@ def initialize_session_state() -> None:
         st.session_state.interrupt_data = None
 
 
+# -----------------------------
+# API Functions
+# -----------------------------
+
 def submit_support_request(
     api_url: str,
     thread_id: str,
@@ -48,7 +162,7 @@ def submit_support_request(
             "thread_id": thread_id,
             "message": message,
         },
-        timeout=60,
+        timeout=120,
     )
 
     response.raise_for_status()
@@ -67,7 +181,7 @@ def resume_support_request(
             "thread_id": thread_id,
             "human_response": human_response,
         },
-        timeout=60,
+        timeout=120,
     )
 
     response.raise_for_status()
@@ -75,12 +189,19 @@ def resume_support_request(
     return response.json()
 
 
+# -----------------------------
+# Conversation
+# -----------------------------
+
 def start_new_conversation() -> None:
     st.session_state.thread_id = (
         f"customer-{uuid.uuid4().hex[:8]}"
     )
+
     st.session_state.messages = []
+
     st.session_state.waiting_for_human = False
+
     st.session_state.interrupt_data = None
 
 
@@ -88,6 +209,7 @@ def process_customer_message(
     customer_message: str,
     api_url: str,
 ) -> None:
+
     st.session_state.messages.append(
         {
             "role": "user",
@@ -96,7 +218,11 @@ def process_customer_message(
     )
 
     try:
-        with st.spinner("Processing support request..."):
+
+        with st.spinner(
+            "Processing support request..."
+        ):
+
             result = submit_support_request(
                 api_url=api_url,
                 thread_id=st.session_state.thread_id,
@@ -104,6 +230,7 @@ def process_customer_message(
             )
 
         if result["status"] == "completed":
+
             st.session_state.messages.append(
                 {
                     "role": "assistant",
@@ -112,19 +239,173 @@ def process_customer_message(
             )
 
         elif result["status"] == "human_review_required":
+
             st.session_state.waiting_for_human = True
+
             st.session_state.interrupt_data = result[
                 "interrupt_data"
             ]
 
     except requests.RequestException as exc:
-        st.error(f"API request failed: {exc}")
+
+        st.error(
+            f"API request failed: {exc}"
+        )
 
 
 initialize_session_state()
 
 
-st.title("🎧 Customer Support Agent")
+# -----------------------------
+# Sidebar
+# -----------------------------
+
+with st.sidebar:
+
+    st.markdown(
+        """
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-title">
+                🎬 SAWANTFLIX
+            </div>
+
+            <div class="sidebar-brand-subtitle">
+                Customer Support Agent
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
+
+    st.subheader("Conversation")
+
+    st.code(
+        st.session_state.thread_id
+    )
+
+    if st.button(
+        "Start New Conversation",
+        use_container_width=True,
+    ):
+
+        start_new_conversation()
+
+        st.rerun()
+
+    st.divider()
+
+    st.subheader("API Connection")
+
+    api_url = st.text_input(
+        "API URL",
+        value=DEFAULT_API_URL,
+    )
+
+    # Back to Sawantflix
+    st.markdown(
+        f"""
+        <div class="back-card">
+
+            <div class="back-card-title">
+                ← Back to Sawantflix
+            </div>
+
+            <div class="back-card-text">
+                Continue streaming your favorite content.
+            </div>
+
+            <br>
+
+            <a
+                href="{SAWANTFLIX_URL}"
+                target="_blank"
+                style="
+                    color:#ff2d55;
+                    text-decoration:none;
+                    font-weight:700;
+                "
+            >
+                Open Sawantflix ↗
+            </a>
+
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <br>
+
+        <div class="help-text">
+
+        🎧 <b>Need Help?</b><br>
+
+        This is the AI customer support
+        service for Sawantflix.
+
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# -----------------------------
+# Sawantflix Support Banner
+# -----------------------------
+
+st.markdown(
+    f"""
+    <div class="support-banner">
+
+        <div class="support-banner-content">
+
+            <div>
+
+                <div class="support-banner-title">
+                    🎬 Official Customer Support for
+                    <span class="sawantflix-name">
+                        SAWANTFLIX
+                    </span>
+                </div>
+
+                <div class="support-banner-text">
+                    Get help with your account,
+                    subscriptions, payments,
+                    streaming issues and more.
+                </div>
+
+            </div>
+
+            <div>
+
+                <a
+                    class="sawantflix-button"
+                    href="{SAWANTFLIX_URL}"
+                    target="_blank"
+                >
+                    Open Sawantflix ↗
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# -----------------------------
+# Main Heading
+# -----------------------------
+
+st.title(
+    "🎧 Customer Support Agent"
+)
 
 st.caption(
     "LangGraph-powered customer support with hybrid routing, "
@@ -132,34 +413,30 @@ st.caption(
 )
 
 
-with st.sidebar:
-    st.subheader("Conversation")
-
-    st.code(st.session_state.thread_id)
-
-    if st.button(
-        "Start New Conversation",
-        use_container_width=True,
-    ):
-        start_new_conversation()
-        st.rerun()
-
-    st.divider()
-
-    api_url = st.text_input(
-        "API URL",
-        value=DEFAULT_API_URL,
-    )
-
+# -----------------------------
+# Conversation Messages
+# -----------------------------
 
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
 
+    with st.chat_message(
+        message["role"]
+    ):
+
+        st.markdown(
+            message["content"]
+        )
+
+
+# -----------------------------
+# Human Review
+# -----------------------------
 
 if st.session_state.waiting_for_human:
+
     interrupt_data = (
-        st.session_state.interrupt_data or {}
+        st.session_state.interrupt_data
+        or {}
     )
 
     st.warning(
@@ -170,6 +447,7 @@ if st.session_state.waiting_for_human:
         "View escalation details",
         expanded=True,
     ):
+
         st.write(
             "Customer Message:",
             interrupt_data.get(
@@ -194,17 +472,22 @@ if st.session_state.waiting_for_human:
             ),
         )
 
-        diagnostic_result = interrupt_data.get(
-            "diagnostic_result"
+        diagnostic_result = (
+            interrupt_data.get(
+                "diagnostic_result"
+            )
         )
 
         if diagnostic_result:
+
             st.write(
                 "Diagnostic Result:",
                 diagnostic_result,
             )
 
-    st.subheader("Human Support Review")
+    st.subheader(
+        "Human Support Review"
+    )
 
     human_response = st.text_area(
         "Human Support Response",
@@ -218,16 +501,21 @@ if st.session_state.waiting_for_human:
         type="primary",
         use_container_width=True,
     ):
+
         if not human_response.strip():
+
             st.warning(
                 "Enter a human support response."
             )
 
         else:
+
             try:
+
                 with st.spinner(
                     "Resuming workflow..."
                 ):
+
                     result = resume_support_request(
                         api_url=api_url,
                         thread_id=(
@@ -243,6 +531,7 @@ if st.session_state.waiting_for_human:
                 )
 
                 if response_text:
+
                     st.session_state.messages.append(
                         {
                             "role": "assistant",
@@ -251,83 +540,103 @@ if st.session_state.waiting_for_human:
                     )
 
                 st.session_state.waiting_for_human = False
+
                 st.session_state.interrupt_data = None
 
                 st.rerun()
 
             except requests.RequestException as exc:
+
                 st.error(
                     f"API request failed: {exc}"
                 )
 
 
+# -----------------------------
+# Quick Support
+# -----------------------------
+
 if not st.session_state.waiting_for_human:
 
-    st.markdown("### Quick Support")
+    st.markdown(
+        "### Quick Support"
+    )
 
     quick_messages = {
-        "💳 Duplicate Charge": (
-            "I was charged twice for my subscription."
-        ),
-        "🔐 Reset Password": (
-            "I want to reset my password."
-        ),
-        "🔒 Account Locked": (
-            "My account is locked and I cannot login."
-        ),
-        "🛠️ Technical Issue": (
-            "My application is not working."
-        ),
-        "💰 Pricing": (
-            "I have a question about pricing."
-        ),
+
+        "💳 Duplicate Charge":
+            "I was charged twice for my subscription.",
+
+        "🔐 Reset Password":
+            "I want to reset my password.",
+
+        "🔒 Account Locked":
+            "My account is locked and I cannot login.",
+
+        "🛠️ Technical Issue":
+            "My application is not working.",
+
+        "💰 Pricing":
+            "I have a question about pricing.",
     }
 
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4, col5 = (
+        st.columns(5)
+    )
 
     selected_message = None
 
     with col1:
+
         if st.button(
             "💳 Duplicate Charge",
             use_container_width=True,
         ):
+
             selected_message = quick_messages[
                 "💳 Duplicate Charge"
             ]
 
     with col2:
+
         if st.button(
             "🔐 Reset Password",
             use_container_width=True,
         ):
+
             selected_message = quick_messages[
                 "🔐 Reset Password"
             ]
 
     with col3:
+
         if st.button(
             "🔒 Account Locked",
             use_container_width=True,
         ):
+
             selected_message = quick_messages[
                 "🔒 Account Locked"
             ]
 
     with col4:
+
         if st.button(
             "🛠️ Technical Issue",
             use_container_width=True,
         ):
+
             selected_message = quick_messages[
                 "🛠️ Technical Issue"
             ]
 
     with col5:
+
         if st.button(
             "💰 Pricing",
             use_container_width=True,
         ):
+
             selected_message = quick_messages[
                 "💰 Pricing"
             ]
@@ -337,15 +646,19 @@ if not st.session_state.waiting_for_human:
     )
 
     if customer_message:
+
         process_customer_message(
             customer_message=customer_message,
             api_url=api_url,
         )
+
         st.rerun()
 
     if selected_message:
+
         process_customer_message(
             customer_message=selected_message,
             api_url=api_url,
         )
+
         st.rerun()
