@@ -28,121 +28,116 @@ st.set_page_config(
 
 
 # ============================================================
-# THEME-AWARE STYLING
+# STYLING
 # ============================================================
 
 st.markdown(
     """
     <style>
-    :root {
-        --sf-red: #e50914;
-        --sf-red-hover: #b20710;
-        --sf-radius: 14px;
-    }
 
-    /* Main page width */
     .block-container {
         max-width: 1250px;
         padding-top: 2rem;
         padding-bottom: 3rem;
     }
 
-    /* Sawantflix logo */
+    /* ======================================================
+       SAWANTFLIX MAIN LOGO
+       ====================================================== */
+
     .sf-logo {
         text-align: center;
-        font-size: 42px;
+        white-space: nowrap;
+        overflow: visible;
+        font-size: clamp(32px, 5vw, 48px);
         font-weight: 900;
         letter-spacing: -2px;
-        line-height: 1;
-        margin-bottom: 8px;
+        line-height: 1.15;
+        margin: 8px 0 8px 0;
     }
 
     .sf-logo-red {
-        color: var(--sf-red);
+        color: #e50914;
     }
 
-    .sf-logo-light {
+    .sf-logo-theme {
         color: var(--text-color);
     }
 
     .sf-subtitle {
         text-align: center;
         color: var(--text-color);
-        opacity: 0.65;
-        font-size: 17px;
-        font-weight: 600;
-        margin-bottom: 5px;
+        opacity: 0.72;
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 8px;
     }
 
     .sf-description {
         text-align: center;
         color: var(--text-color);
-        opacity: 0.58;
+        opacity: 0.6;
         font-size: 14px;
+        margin-top: 6px;
         margin-bottom: 18px;
     }
 
-    /* Support section */
+
+    /* ======================================================
+       CUSTOMER SUPPORT AGENT
+       ====================================================== */
+
     .agent-title {
         text-align: center;
         color: var(--text-color);
-        font-size: 38px;
+        font-size: clamp(30px, 4vw, 40px);
         font-weight: 800;
-        margin-top: 4px;
+        margin-top: 8px;
         margin-bottom: 6px;
+        white-space: nowrap;
     }
 
     .agent-subtitle {
         text-align: center;
         color: var(--text-color);
-        opacity: 0.58;
+        opacity: 0.6;
         font-size: 14px;
         margin-bottom: 22px;
     }
 
-    .headset {
-        margin-right: 8px;
-    }
 
-    /* Quick support card */
-    .quick-card {
-        background: var(--secondary-background-color);
-        border: 1px solid rgba(128, 128, 128, 0.18);
-        border-radius: 16px;
-        padding: 18px 18px 8px 18px;
-        margin-top: 8px;
-        margin-bottom: 18px;
-    }
+    /* ======================================================
+       SIDEBAR LOGO
+       ====================================================== */
 
-    .quick-title {
-        color: var(--text-color);
-        font-size: 23px;
-        font-weight: 750;
-        margin-bottom: 12px;
-    }
-
-    /* Sidebar */
     .sidebar-logo {
         text-align: center;
         padding: 8px 0 16px 0;
+        overflow: visible;
     }
 
     .sidebar-logo-text {
-        font-size: 28px;
+        white-space: nowrap;
+        font-size: 27px;
         font-weight: 900;
         letter-spacing: -1.5px;
+        line-height: 1.2;
     }
 
     .sidebar-subtitle {
         color: var(--text-color);
-        opacity: 0.58;
+        opacity: 0.6;
         font-size: 13px;
-        margin-top: 5px;
+        margin-top: 6px;
     }
 
-    /* Sawantflix info card */
+
+    /* ======================================================
+       HELP CARD
+       ====================================================== */
+
     .sf-help-card {
-        border: 1px solid rgba(229, 9, 20, 0.35);
+        border: 1px solid rgba(229, 9, 20, 0.4);
         border-radius: 14px;
         padding: 14px;
         margin-top: 12px;
@@ -150,7 +145,7 @@ st.markdown(
     }
 
     .sf-help-title {
-        color: var(--sf-red);
+        color: #e50914;
         font-weight: 800;
         font-size: 15px;
         margin-bottom: 5px;
@@ -163,20 +158,24 @@ st.markdown(
         line-height: 1.45;
     }
 
-    /* Center launch button */
-    .launch-area {
-        text-align: center;
-        margin-bottom: 24px;
+
+    /* ======================================================
+       RESPONSIVE SUPPORT
+       ====================================================== */
+
+    @media (max-width: 700px) {
+
+        .sf-logo {
+            font-size: 32px;
+        }
+
+        .agent-title {
+            white-space: normal;
+            font-size: 30px;
+        }
+
     }
 
-    /* Hide unnecessary Streamlit decoration */
-    #MainMenu {
-        visibility: hidden;
-    }
-
-    footer {
-        visibility: hidden;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -188,6 +187,7 @@ st.markdown(
 # ============================================================
 
 def initialize_session_state():
+
     if "thread_id" not in st.session_state:
         st.session_state.thread_id = (
             f"customer-{uuid.uuid4().hex[:8]}"
@@ -204,7 +204,7 @@ def initialize_session_state():
 
 
 # ============================================================
-# API FUNCTIONS
+# API
 # ============================================================
 
 def submit_support_request(
@@ -212,6 +212,7 @@ def submit_support_request(
     thread_id,
     message,
 ):
+
     response = requests.post(
         f"{api_url.rstrip('/')}/support",
         json={
@@ -231,6 +232,7 @@ def resume_support_request(
     thread_id,
     human_response,
 ):
+
     response = requests.post(
         f"{api_url.rstrip('/')}/support/resume",
         json={
@@ -246,10 +248,11 @@ def resume_support_request(
 
 
 # ============================================================
-# CONVERSATION FUNCTIONS
+# CONVERSATION
 # ============================================================
 
 def start_new_conversation():
+
     st.session_state.thread_id = (
         f"customer-{uuid.uuid4().hex[:8]}"
     )
@@ -265,6 +268,7 @@ def process_customer_message(
     customer_message,
     api_url,
 ):
+
     st.session_state.messages.append(
         {
             "role": "user",
@@ -279,9 +283,9 @@ def process_customer_message(
         ):
 
             result = submit_support_request(
-                api_url=api_url,
-                thread_id=st.session_state.thread_id,
-                message=customer_message,
+                api_url,
+                st.session_state.thread_id,
+                customer_message,
             )
 
         if result.get("status") == "completed":
@@ -298,7 +302,9 @@ def process_customer_message(
                 }
             )
 
-        elif result.get("status") == "human_review_required":
+        elif result.get(
+            "status"
+        ) == "human_review_required":
 
             st.session_state.waiting_for_human = True
 
@@ -397,12 +403,14 @@ with st.sidebar:
 
 
     # --------------------------------------------------------
-    # HELP CARD
+    # HELP
     # --------------------------------------------------------
 
     st.markdown(
         '<div class="sf-help-card">'
-        '<div class="sf-help-title">🎧 Need Help?</div>'
+        '<div class="sf-help-title">'
+        '🎧 Need Help?'
+        '</div>'
         '<div class="sf-help-text">'
         'This is the AI customer support service for Sawantflix.'
         '</div>'
@@ -418,13 +426,15 @@ with st.sidebar:
 st.markdown(
     '<div class="sf-logo">'
     '<span class="sf-logo-red">SAWANT</span>'
-    '<span class="sf-logo-light">FLIX</span>'
+    '<span class="sf-logo-theme">FLIX</span>'
     '</div>',
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    '<div class="sf-subtitle">Customer Support</div>',
+    '<div class="sf-subtitle">'
+    'Customer Support'
+    '</div>',
     unsafe_allow_html=True,
 )
 
@@ -436,15 +446,15 @@ st.markdown(
 )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # OPEN SAWANTFLIX
-# ------------------------------------------------------------
+# ============================================================
 
-launch_left, launch_center, launch_right = st.columns(
+left, center, right = st.columns(
     [1, 1, 1]
 )
 
-with launch_center:
+with center:
 
     st.link_button(
         "🎬 Open Sawantflix ↗",
@@ -462,8 +472,7 @@ st.divider()
 
 st.markdown(
     '<div class="agent-title">'
-    '<span class="headset">🎧</span>'
-    'Customer Support Agent'
+    '🎧 Customer Support Agent'
     '</div>',
     unsafe_allow_html=True,
 )
@@ -478,7 +487,7 @@ st.markdown(
 
 
 # ============================================================
-# CONVERSATION MESSAGES
+# CHAT HISTORY
 # ============================================================
 
 for message in st.session_state.messages:
@@ -538,13 +547,11 @@ if st.session_state.waiting_for_human:
             ),
         )
 
-
         diagnostic_result = (
             interrupt_data.get(
                 "diagnostic_result"
             )
         )
-
 
         if diagnostic_result:
 
@@ -588,13 +595,9 @@ if st.session_state.waiting_for_human:
                 ):
 
                     result = resume_support_request(
-                        api_url=api_url,
-                        thread_id=(
-                            st.session_state.thread_id
-                        ),
-                        human_response=(
-                            human_response.strip()
-                        ),
+                        api_url,
+                        st.session_state.thread_id,
+                        human_response.strip(),
                     )
 
 
@@ -633,11 +636,8 @@ if st.session_state.waiting_for_human:
 
 if not st.session_state.waiting_for_human:
 
-    st.markdown(
-        '<div class="quick-card">'
-        '<div class="quick-title">⚡ Quick Support</div>'
-        '</div>',
-        unsafe_allow_html=True,
+    st.subheader(
+        "⚡ Quick Support"
     )
 
 
@@ -745,22 +745,22 @@ if not st.session_state.waiting_for_human:
     if customer_message:
 
         process_customer_message(
-            customer_message=customer_message,
-            api_url=api_url,
+            customer_message,
+            api_url,
         )
 
         st.rerun()
 
 
     # --------------------------------------------------------
-    # QUICK SUPPORT MESSAGE
+    # QUICK SUPPORT
     # --------------------------------------------------------
 
     if selected_message:
 
         process_customer_message(
-            customer_message=selected_message,
-            api_url=api_url,
+            selected_message,
+            api_url,
         )
 
         st.rerun()
