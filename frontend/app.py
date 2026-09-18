@@ -1,13 +1,12 @@
 import os
 import uuid
-from textwrap import dedent
 
 import requests
 import streamlit as st
 
 
 # ============================================================
-# Configuration
+# CONFIGURATION
 # ============================================================
 
 SAWANTFLIX_URL = "https://sawantflix-app-1.onrender.com"
@@ -29,131 +28,7 @@ st.set_page_config(
 
 
 # ============================================================
-# Custom Styling
-# ============================================================
-
-st.markdown(
-    """
-    <style>
-
-        /* -------------------------
-           Sawantflix Support Banner
-           ------------------------- */
-
-        .support-banner {
-            border: 1px solid #ff2d55;
-            border-radius: 14px;
-            padding: 18px 22px;
-            margin-bottom: 28px;
-            background: linear-gradient(
-                135deg,
-                rgba(255, 45, 85, 0.12),
-                rgba(20, 20, 30, 0.35)
-            );
-        }
-
-        .support-banner-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .support-banner-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .support-banner-text {
-            font-size: 15px;
-            opacity: 0.8;
-        }
-
-        .sawantflix-name {
-            color: #ff2d55;
-        }
-
-        .sawantflix-button {
-            display: inline-block;
-            background: #ff2d55;
-            color: white !important;
-            text-decoration: none !important;
-            padding: 12px 22px;
-            border-radius: 9px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .sawantflix-button:hover {
-            background: #e51f47;
-            color: white !important;
-        }
-
-
-        /* -------------------------
-           Sidebar Branding
-           ------------------------- */
-
-        .sidebar-brand {
-            text-align: center;
-            padding: 10px 0 20px 0;
-        }
-
-        .sidebar-brand-title {
-            font-size: 25px;
-            font-weight: 800;
-            color: #ff2d55;
-        }
-
-        .sidebar-brand-subtitle {
-            font-size: 14px;
-            opacity: 0.75;
-        }
-
-
-        /* -------------------------
-           Back to Sawantflix Card
-           ------------------------- */
-
-        .back-card {
-            border: 1px solid #ff2d55;
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 15px;
-            background: rgba(255, 45, 85, 0.08);
-        }
-
-        .back-card-title {
-            font-weight: 700;
-            font-size: 17px;
-        }
-
-        .back-card-text {
-            font-size: 13px;
-            opacity: 0.75;
-            margin-top: 5px;
-        }
-
-
-        /* -------------------------
-           Help Text
-           ------------------------- */
-
-        .help-text {
-            font-size: 13px;
-            opacity: 0.75;
-            line-height: 1.5;
-        }
-
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-# ============================================================
-# Session State
+# SESSION STATE
 # ============================================================
 
 def initialize_session_state() -> None:
@@ -174,7 +49,7 @@ def initialize_session_state() -> None:
 
 
 # ============================================================
-# API Functions
+# API FUNCTIONS
 # ============================================================
 
 def submit_support_request(
@@ -218,7 +93,7 @@ def resume_support_request(
 
 
 # ============================================================
-# Conversation Functions
+# CONVERSATION FUNCTIONS
 # ============================================================
 
 def start_new_conversation() -> None:
@@ -288,48 +163,34 @@ def process_customer_message(
 
 
 # ============================================================
-# Initialize
+# INITIALIZE
 # ============================================================
 
 initialize_session_state()
 
 
 # ============================================================
-# Sidebar
+# SIDEBAR
 # ============================================================
 
 with st.sidebar:
 
-    # ----------------------------------------
+    # --------------------------------------------------------
     # Sawantflix Branding
-    # ----------------------------------------
+    # --------------------------------------------------------
 
-    st.markdown(
-        dedent(
-            """
-            <div class="sidebar-brand">
+    st.title("🎬 SAWANTFLIX")
 
-                <div class="sidebar-brand-title">
-                    🎬 SAWANTFLIX
-                </div>
-
-                <div class="sidebar-brand-subtitle">
-                    Customer Support Agent
-                </div>
-
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
+    st.caption(
+        "Customer Support Agent"
     )
-
 
     st.divider()
 
 
-    # ----------------------------------------
+    # --------------------------------------------------------
     # Conversation
-    # ----------------------------------------
+    # --------------------------------------------------------
 
     st.subheader("Conversation")
 
@@ -351,9 +212,9 @@ with st.sidebar:
     st.divider()
 
 
-    # ----------------------------------------
+    # --------------------------------------------------------
     # API Connection
-    # ----------------------------------------
+    # --------------------------------------------------------
 
     st.subheader("API Connection")
 
@@ -363,123 +224,65 @@ with st.sidebar:
     )
 
 
-    # ----------------------------------------
+    # --------------------------------------------------------
     # Back to Sawantflix
-    # ----------------------------------------
+    # --------------------------------------------------------
 
-    st.markdown(
-        dedent(
-            f"""
-            <div class="back-card">
+    st.link_button(
+        "🎬 Open Sawantflix ↗",
+        SAWANTFLIX_URL,
+        use_container_width=True,
+    )
 
-                <div class="back-card-title">
-                    ← Back to Sawantflix
-                </div>
-
-                <div class="back-card-text">
-                    Continue streaming your favorite content.
-                </div>
-
-                <br>
-
-                <a
-                    href="{SAWANTFLIX_URL}"
-                    target="_blank"
-                    style="
-                        color: #ff2d55;
-                        text-decoration: none;
-                        font-weight: 700;
-                    "
-                >
-                    Open Sawantflix ↗
-                </a>
-
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
+    st.caption(
+        "Continue streaming your favorite content."
     )
 
 
-    # ----------------------------------------
+    st.divider()
+
+
+    # --------------------------------------------------------
     # Help
-    # ----------------------------------------
+    # --------------------------------------------------------
 
-    st.markdown(
-        dedent(
-            """
-            <br>
-
-            <div class="help-text">
-
-                🎧 <b>Need Help?</b><br>
-
-                This is the AI customer support
-                service for Sawantflix.
-
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
+    st.info(
+        "🎧 **Need Help?**\n\n"
+        "This is the AI customer support "
+        "service for Sawantflix."
     )
 
 
 # ============================================================
-# Sawantflix Support Banner
+# SAWANTFLIX SUPPORT HEADER
 # ============================================================
 
-st.markdown(
-    dedent(
-        f"""
-        <div class="support-banner">
+st.header(
+    "🎬 Sawantflix Customer Support"
+)
 
-            <div class="support-banner-content">
+st.write(
+    "Welcome to the official AI customer support "
+    "service for Sawantflix."
+)
 
-                <div>
-
-                    <div class="support-banner-title">
-
-                        🎬 Official Customer Support for
-                        <span class="sawantflix-name">
-                            SAWANTFLIX
-                        </span>
-
-                    </div>
-
-                    <div class="support-banner-text">
-
-                        Get help with your account,
-                        subscriptions, payments,
-                        streaming issues and more.
-
-                    </div>
-
-                </div>
-
-
-                <div>
-
-                    <a
-                        class="sawantflix-button"
-                        href="{SAWANTFLIX_URL}"
-                        target="_blank"
-                    >
-                        Open Sawantflix ↗
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-        """
-    ),
-    unsafe_allow_html=True,
+st.caption(
+    "Get help with your account, subscriptions, "
+    "payments, streaming issues and more."
 )
 
 
+st.link_button(
+    "Open Sawantflix ↗",
+    SAWANTFLIX_URL,
+)
+
+
+st.divider()
+
+
 # ============================================================
-# Main Heading
+# MAIN AGENT HEADING
 # ============================================================
 
 st.title(
@@ -493,7 +296,7 @@ st.caption(
 
 
 # ============================================================
-# Conversation Messages
+# CONVERSATION MESSAGES
 # ============================================================
 
 for message in st.session_state.messages:
@@ -508,7 +311,7 @@ for message in st.session_state.messages:
 
 
 # ============================================================
-# Human Support Review
+# HUMAN SUPPORT REVIEW
 # ============================================================
 
 if st.session_state.waiting_for_human:
@@ -553,11 +356,13 @@ if st.session_state.waiting_for_human:
             ),
         )
 
+
         diagnostic_result = (
             interrupt_data.get(
                 "diagnostic_result"
             )
         )
+
 
         if diagnostic_result:
 
@@ -641,13 +446,13 @@ if st.session_state.waiting_for_human:
 
 
 # ============================================================
-# Quick Support
+# QUICK SUPPORT
 # ============================================================
 
 if not st.session_state.waiting_for_human:
 
-    st.markdown(
-        "### Quick Support"
+    st.subheader(
+        "Quick Support"
     )
 
 
@@ -678,6 +483,10 @@ if not st.session_state.waiting_for_human:
     selected_message = None
 
 
+    # --------------------------------------------------------
+    # Duplicate Charge
+    # --------------------------------------------------------
+
     with col1:
 
         if st.button(
@@ -689,6 +498,10 @@ if not st.session_state.waiting_for_human:
                 "💳 Duplicate Charge"
             ]
 
+
+    # --------------------------------------------------------
+    # Reset Password
+    # --------------------------------------------------------
 
     with col2:
 
@@ -702,6 +515,10 @@ if not st.session_state.waiting_for_human:
             ]
 
 
+    # --------------------------------------------------------
+    # Account Locked
+    # --------------------------------------------------------
+
     with col3:
 
         if st.button(
@@ -713,6 +530,10 @@ if not st.session_state.waiting_for_human:
                 "🔒 Account Locked"
             ]
 
+
+    # --------------------------------------------------------
+    # Technical Issue
+    # --------------------------------------------------------
 
     with col4:
 
@@ -726,6 +547,10 @@ if not st.session_state.waiting_for_human:
             ]
 
 
+    # --------------------------------------------------------
+    # Pricing
+    # --------------------------------------------------------
+
     with col5:
 
         if st.button(
@@ -738,14 +563,18 @@ if not st.session_state.waiting_for_human:
             ]
 
 
-    # ----------------------------------------
-    # Chat Input
-    # ----------------------------------------
+    # ========================================================
+    # CHAT INPUT
+    # ========================================================
 
     customer_message = st.chat_input(
         "Describe your support issue..."
     )
 
+
+    # --------------------------------------------------------
+    # Normal Chat Message
+    # --------------------------------------------------------
 
     if customer_message:
 
@@ -756,6 +585,10 @@ if not st.session_state.waiting_for_human:
 
         st.rerun()
 
+
+    # --------------------------------------------------------
+    # Quick Support Message
+    # --------------------------------------------------------
 
     if selected_message:
 
