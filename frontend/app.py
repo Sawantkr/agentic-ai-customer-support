@@ -5,10 +5,13 @@ import requests
 import streamlit as st
 
 
-DEFAULT_API_URL = os.getenv(
-    "API_URL",
-    "http://127.0.0.1:8000",
-)
+if "API_URL" in st.secrets:
+    DEFAULT_API_URL = st.secrets["API_URL"]
+else:
+    DEFAULT_API_URL = os.getenv(
+        "API_URL",
+        "http://127.0.0.1:8000",
+    )
 
 
 st.set_page_config(
