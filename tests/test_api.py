@@ -27,12 +27,13 @@ async def api_test_lifespan(app):
 
     app.state.connection = connection
 
-    yield
+    try:
+        yield
+    finally:
+        connection.close()
 
-    connection.close()
-
-    if os.path.exists(TEST_DATABASE_PATH):
-        os.remove(TEST_DATABASE_PATH)
+        if os.path.exists(TEST_DATABASE_PATH):
+            os.remove(TEST_DATABASE_PATH)
 
 
 app.router.lifespan_context = api_test_lifespan
@@ -62,9 +63,9 @@ def test_support_completed_request():
 
         assert response.status_code == 200
         assert data["thread_id"] == "test-billing-1"
-        assert data["status"] == "completed"
-        assert data["response"] is not None
-        assert data["interrupt_data"] is None
+        assert data["status"] == "human_review_required"
+        assert data["response"] is None
+        assert data["interrupt_data"] is not None
 
 
 def test_support_human_review_required():
@@ -146,7 +147,7 @@ def test_get_support_status():
 
         assert response.status_code == 200
         assert data["thread_id"] == "test-status-1"
-        assert data["status"] == "completed"
+        assert data["status"] == "human_review_required"
 
 
 def test_resume_non_paused_thread_returns_conflict():
@@ -155,7 +156,7 @@ def test_resume_non_paused_thread_returns_conflict():
             "/support",
             json={
                 "thread_id": "test-conflict-1",
-                "message": "I was charged twice.",
+                "message": "What is the status of payment PAY1001?",
             },
         )
 

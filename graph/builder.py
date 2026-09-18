@@ -4,7 +4,10 @@ from graph.state import SupportState
 
 from nodes.error_nodes import handle_workflow_error
 from nodes.human_support_nodes import human_support_workflow
+from nodes.rag_nodes import knowledge_base_support
+from nodes.agent_tools import agent_tool_support
 from nodes.specialized_nodes import fallback_support
+
 from nodes.support_nodes import (
     finalize_response,
     receive_query,
@@ -14,10 +17,13 @@ from routers.classification_router import route_after_classification
 from routers.error_router import route_after_llm_classification
 from routers.escalation_router import route_after_support_workflow
 from routers.intent_classifier import classify_intent
+
 from routers.intent_router import (
     route_by_intent,
     route_llm_intent_node,
 )
+
+from routers.knowledge_router import route_knowledge_question
 from routers.llm_classifier import llm_classify_intent
 
 from workflows.account.builder import build_account_graph
@@ -31,11 +37,12 @@ INTENT_PATH_MAP = {
     "technical": "technical_workflow",
     "account": "account_workflow",
     "general": "general_workflow",
-    "unknown": "fallback_support",
+    "unknown": "knowledge_base_support",
 }
 
 
 def build_graph(checkpointer=None):
+
     builder = StateGraph(SupportState)
 
     # --------------------------------------------------
@@ -104,6 +111,24 @@ def build_graph(checkpointer=None):
     )
 
     # --------------------------------------------------
+    # RAG Knowledge Base Support
+    # --------------------------------------------------
+
+    builder.add_node(
+        "knowledge_base_support",
+        knowledge_base_support,
+    )
+
+    # --------------------------------------------------
+    # Agent Tool Support
+    # --------------------------------------------------
+
+    builder.add_node(
+        "agent_tool_support",
+        agent_tool_support,
+    )
+
+    # --------------------------------------------------
     # Fallback support
     # --------------------------------------------------
 
@@ -148,9 +173,18 @@ def build_graph(checkpointer=None):
         "receive_query",
     )
 
-    builder.add_edge(
+    # --------------------------------------------------
+    # Knowledge / Tool / Support routing
+    # --------------------------------------------------
+
+    builder.add_conditional_edges(
         "receive_query",
-        "classify_intent",
+        route_knowledge_question,
+        {
+            "tool": "agent_tool_support",
+            "knowledge": "knowledge_base_support",
+            "support": "classify_intent",
+        },
     )
 
     # --------------------------------------------------
@@ -165,7 +199,7 @@ def build_graph(checkpointer=None):
             "technical": "technical_workflow",
             "account": "account_workflow",
             "general": "general_workflow",
-            "unknown": "fallback_support",
+            "unknown": "knowledge_base_support",
             "llm": "llm_classify_intent",
         },
     )
@@ -174,8 +208,6 @@ def build_graph(checkpointer=None):
     # LLM result routing
     # --------------------------------------------------
 
-    # First decision:
-    # Did the LLM classifier execute successfully?
     builder.add_conditional_edges(
         "llm_classify_intent",
         route_after_llm_classification,
@@ -185,8 +217,10 @@ def build_graph(checkpointer=None):
         },
     )
 
-    # Second decision:
-    # Which support domain did the LLM classify?
+    # --------------------------------------------------
+    # LLM intent routing
+    # --------------------------------------------------
+
     builder.add_conditional_edges(
         "route_llm_intent",
         route_by_intent,
@@ -197,10 +231,14 @@ def build_graph(checkpointer=None):
     # Post-workflow routing
     # --------------------------------------------------
 
-    # Billing currently completes directly.
-    builder.add_edge(
+    # Billing workflow may finalize or escalate.
+    builder.add_conditional_edges(
         "billing_workflow",
-        "finalize_response",
+        route_after_support_workflow,
+        {
+            "finalize": "finalize_response",
+            "escalate": "human_support_workflow",
+        },
     )
 
     # Technical workflow may finalize or escalate.
@@ -229,7 +267,19 @@ def build_graph(checkpointer=None):
         "finalize_response",
     )
 
-    # Unsupported requests complete through fallback.
+    # RAG knowledge base completes through finalization.
+    builder.add_edge(
+        "knowledge_base_support",
+        "finalize_response",
+    )
+
+    # Agent tools complete through finalization.
+    builder.add_edge(
+        "agent_tool_support",
+        "finalize_response",
+    )
+
+    # Fallback support completes through finalization.
     builder.add_edge(
         "fallback_support",
         "finalize_response",
@@ -244,7 +294,10 @@ def build_graph(checkpointer=None):
         "human_support_workflow",
     )
 
-    # Human escalation rejoins common finalization.
+    # --------------------------------------------------
+    # Human escalation rejoins common finalization
+    # --------------------------------------------------
+
     builder.add_edge(
         "human_support_workflow",
         "finalize_response",
@@ -259,4 +312,6 @@ def build_graph(checkpointer=None):
         END,
     )
 
-    return builder.compile(checkpointer=checkpointer)
+    return builder.compile(
+        checkpointer=checkpointer,
+    )

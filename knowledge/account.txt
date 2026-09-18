@@ -1,0 +1,10 @@
+Account Support
+
+Password Reset:
+Customers can reset their password from the login page by selecting Forgot Password.
+
+Account Login:
+If a customer cannot log in, they should verify their email and password and use the password reset option if needed.
+
+Account Access:
+Customers having difficulty accessing their account should provide details about the login problem to support.

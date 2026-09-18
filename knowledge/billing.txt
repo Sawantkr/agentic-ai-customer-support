@@ -1,0 +1,13 @@
+Billing Support
+
+Duplicate Charges:
+If a customer believes they were charged twice for the same subscription, the duplicate transaction should be reviewed by the billing support team.
+
+Refunds:
+Customers can contact billing support to request information about refunds.
+
+Invoices:
+Customers can contact billing support for questions about invoices and billing records.
+
+Payments:
+Customers can contact support for questions about payment-related issues.

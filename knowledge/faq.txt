@@ -1,0 +1,16 @@
+Customer Support FAQ
+
+Password Reset:
+Customers can reset their password from the login page by selecting the Forgot Password option and following the instructions sent to their registered email.
+
+Account Login:
+If a customer cannot log in, they should verify their email and password and try the password reset option if necessary.
+
+Billing:
+Customers can contact support for questions about charges, duplicate charges, refunds, invoices, and payments.
+
+Technical Issues:
+Customers experiencing application errors, crashes, or other technical problems should provide details about the issue and any error messages.
+
+Pricing:
+Customers can contact support for information about available plans, pricing, and product features.
