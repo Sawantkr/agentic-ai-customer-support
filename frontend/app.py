@@ -1,12 +1,16 @@
 import os
 import uuid
+from textwrap import dedent
 
 import requests
 import streamlit as st
 
 
-SAWANTFLIX_URL = "https://sawantflix-app-1.onrender.com"
+# ============================================================
+# Configuration
+# ============================================================
 
+SAWANTFLIX_URL = "https://sawantflix-app-1.onrender.com"
 
 if "API_URL" in st.secrets:
     DEFAULT_API_URL = st.secrets["API_URL"]
@@ -24,13 +28,18 @@ st.set_page_config(
 )
 
 
-# -----------------------------
-# Custom UI Styling
-# -----------------------------
+# ============================================================
+# Custom Styling
+# ============================================================
 
 st.markdown(
     """
     <style>
+
+        /* -------------------------
+           Sawantflix Support Banner
+           ------------------------- */
+
         .support-banner {
             border: 1px solid #ff2d55;
             border-radius: 14px;
@@ -38,8 +47,8 @@ st.markdown(
             margin-bottom: 28px;
             background: linear-gradient(
                 135deg,
-                rgba(255,45,85,0.12),
-                rgba(20,20,30,0.35)
+                rgba(255, 45, 85, 0.12),
+                rgba(20, 20, 30, 0.35)
             );
         }
 
@@ -81,6 +90,11 @@ st.markdown(
             color: white !important;
         }
 
+
+        /* -------------------------
+           Sidebar Branding
+           ------------------------- */
+
         .sidebar-brand {
             text-align: center;
             padding: 10px 0 20px 0;
@@ -97,12 +111,17 @@ st.markdown(
             opacity: 0.75;
         }
 
+
+        /* -------------------------
+           Back to Sawantflix Card
+           ------------------------- */
+
         .back-card {
             border: 1px solid #ff2d55;
             border-radius: 12px;
             padding: 15px;
             margin-top: 15px;
-            background: rgba(255,45,85,0.08);
+            background: rgba(255, 45, 85, 0.08);
         }
 
         .back-card-title {
@@ -116,22 +135,29 @@ st.markdown(
             margin-top: 5px;
         }
 
+
+        /* -------------------------
+           Help Text
+           ------------------------- */
+
         .help-text {
             font-size: 13px;
             opacity: 0.75;
             line-height: 1.5;
         }
+
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 
-# -----------------------------
+# ============================================================
 # Session State
-# -----------------------------
+# ============================================================
 
 def initialize_session_state() -> None:
+
     if "thread_id" not in st.session_state:
         st.session_state.thread_id = (
             f"customer-{uuid.uuid4().hex[:8]}"
@@ -147,17 +173,18 @@ def initialize_session_state() -> None:
         st.session_state.interrupt_data = None
 
 
-# -----------------------------
+# ============================================================
 # API Functions
-# -----------------------------
+# ============================================================
 
 def submit_support_request(
     api_url: str,
     thread_id: str,
     message: str,
 ) -> dict:
+
     response = requests.post(
-        f"{api_url}/support",
+        f"{api_url.rstrip('/')}/support",
         json={
             "thread_id": thread_id,
             "message": message,
@@ -175,8 +202,9 @@ def resume_support_request(
     thread_id: str,
     human_response: str,
 ) -> dict:
+
     response = requests.post(
-        f"{api_url}/support/resume",
+        f"{api_url.rstrip('/')}/support/resume",
         json={
             "thread_id": thread_id,
             "human_response": human_response,
@@ -189,11 +217,12 @@ def resume_support_request(
     return response.json()
 
 
-# -----------------------------
-# Conversation
-# -----------------------------
+# ============================================================
+# Conversation Functions
+# ============================================================
 
 def start_new_conversation() -> None:
+
     st.session_state.thread_id = (
         f"customer-{uuid.uuid4().hex[:8]}"
     )
@@ -229,22 +258,27 @@ def process_customer_message(
                 message=customer_message,
             )
 
-        if result["status"] == "completed":
+        if result.get("status") == "completed":
+
+            response_text = result.get(
+                "response",
+                "I could not generate a response.",
+            )
 
             st.session_state.messages.append(
                 {
                     "role": "assistant",
-                    "content": result["response"],
+                    "content": response_text,
                 }
             )
 
-        elif result["status"] == "human_review_required":
+        elif result.get("status") == "human_review_required":
 
             st.session_state.waiting_for_human = True
 
-            st.session_state.interrupt_data = result[
-                "interrupt_data"
-            ]
+            st.session_state.interrupt_data = (
+                result.get("interrupt_data")
+            )
 
     except requests.RequestException as exc:
 
@@ -253,37 +287,56 @@ def process_customer_message(
         )
 
 
+# ============================================================
+# Initialize
+# ============================================================
+
 initialize_session_state()
 
 
-# -----------------------------
+# ============================================================
 # Sidebar
-# -----------------------------
+# ============================================================
 
 with st.sidebar:
 
-    st.markdown(
-        """
-        <div class="sidebar-brand">
-            <div class="sidebar-brand-title">
-                🎬 SAWANTFLIX
-            </div>
+    # ----------------------------------------
+    # Sawantflix Branding
+    # ----------------------------------------
 
-            <div class="sidebar-brand-subtitle">
-                Customer Support Agent
+    st.markdown(
+        dedent(
+            """
+            <div class="sidebar-brand">
+
+                <div class="sidebar-brand-title">
+                    🎬 SAWANTFLIX
+                </div>
+
+                <div class="sidebar-brand-subtitle">
+                    Customer Support Agent
+                </div>
+
             </div>
-        </div>
-        """,
+            """
+        ),
         unsafe_allow_html=True,
     )
 
+
     st.divider()
+
+
+    # ----------------------------------------
+    # Conversation
+    # ----------------------------------------
 
     st.subheader("Conversation")
 
     st.code(
         st.session_state.thread_id
     )
+
 
     if st.button(
         "Start New Conversation",
@@ -294,7 +347,13 @@ with st.sidebar:
 
         st.rerun()
 
+
     st.divider()
+
+
+    # ----------------------------------------
+    # API Connection
+    # ----------------------------------------
 
     st.subheader("API Connection")
 
@@ -303,105 +362,125 @@ with st.sidebar:
         value=DEFAULT_API_URL,
     )
 
+
+    # ----------------------------------------
     # Back to Sawantflix
-    st.markdown(
-        f"""
-        <div class="back-card">
-
-            <div class="back-card-title">
-                ← Back to Sawantflix
-            </div>
-
-            <div class="back-card-text">
-                Continue streaming your favorite content.
-            </div>
-
-            <br>
-
-            <a
-                href="{SAWANTFLIX_URL}"
-                target="_blank"
-                style="
-                    color:#ff2d55;
-                    text-decoration:none;
-                    font-weight:700;
-                "
-            >
-                Open Sawantflix ↗
-            </a>
-
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    # ----------------------------------------
 
     st.markdown(
-        """
-        <br>
+        dedent(
+            f"""
+            <div class="back-card">
 
-        <div class="help-text">
-
-        🎧 <b>Need Help?</b><br>
-
-        This is the AI customer support
-        service for Sawantflix.
-
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-# -----------------------------
-# Sawantflix Support Banner
-# -----------------------------
-
-st.markdown(
-    f"""
-    <div class="support-banner">
-
-        <div class="support-banner-content">
-
-            <div>
-
-                <div class="support-banner-title">
-                    🎬 Official Customer Support for
-                    <span class="sawantflix-name">
-                        SAWANTFLIX
-                    </span>
+                <div class="back-card-title">
+                    ← Back to Sawantflix
                 </div>
 
-                <div class="support-banner-text">
-                    Get help with your account,
-                    subscriptions, payments,
-                    streaming issues and more.
+                <div class="back-card-text">
+                    Continue streaming your favorite content.
                 </div>
 
-            </div>
-
-            <div>
+                <br>
 
                 <a
-                    class="sawantflix-button"
                     href="{SAWANTFLIX_URL}"
                     target="_blank"
+                    style="
+                        color: #ff2d55;
+                        text-decoration: none;
+                        font-weight: 700;
+                    "
                 >
                     Open Sawantflix ↗
                 </a>
 
             </div>
+            """
+        ),
+        unsafe_allow_html=True,
+    )
+
+
+    # ----------------------------------------
+    # Help
+    # ----------------------------------------
+
+    st.markdown(
+        dedent(
+            """
+            <br>
+
+            <div class="help-text">
+
+                🎧 <b>Need Help?</b><br>
+
+                This is the AI customer support
+                service for Sawantflix.
+
+            </div>
+            """
+        ),
+        unsafe_allow_html=True,
+    )
+
+
+# ============================================================
+# Sawantflix Support Banner
+# ============================================================
+
+st.markdown(
+    dedent(
+        f"""
+        <div class="support-banner">
+
+            <div class="support-banner-content">
+
+                <div>
+
+                    <div class="support-banner-title">
+
+                        🎬 Official Customer Support for
+                        <span class="sawantflix-name">
+                            SAWANTFLIX
+                        </span>
+
+                    </div>
+
+                    <div class="support-banner-text">
+
+                        Get help with your account,
+                        subscriptions, payments,
+                        streaming issues and more.
+
+                    </div>
+
+                </div>
+
+
+                <div>
+
+                    <a
+                        class="sawantflix-button"
+                        href="{SAWANTFLIX_URL}"
+                        target="_blank"
+                    >
+                        Open Sawantflix ↗
+                    </a>
+
+                </div>
+
+            </div>
 
         </div>
-
-    </div>
-    """,
+        """
+    ),
     unsafe_allow_html=True,
 )
 
 
-# -----------------------------
+# ============================================================
 # Main Heading
-# -----------------------------
+# ============================================================
 
 st.title(
     "🎧 Customer Support Agent"
@@ -413,9 +492,9 @@ st.caption(
 )
 
 
-# -----------------------------
+# ============================================================
 # Conversation Messages
-# -----------------------------
+# ============================================================
 
 for message in st.session_state.messages:
 
@@ -428,9 +507,9 @@ for message in st.session_state.messages:
         )
 
 
-# -----------------------------
-# Human Review
-# -----------------------------
+# ============================================================
+# Human Support Review
+# ============================================================
 
 if st.session_state.waiting_for_human:
 
@@ -439,9 +518,11 @@ if st.session_state.waiting_for_human:
         or {}
     )
 
+
     st.warning(
         "This request requires human support review."
     )
+
 
     with st.expander(
         "View escalation details",
@@ -485,9 +566,11 @@ if st.session_state.waiting_for_human:
                 diagnostic_result,
             )
 
+
     st.subheader(
         "Human Support Review"
     )
+
 
     human_response = st.text_area(
         "Human Support Response",
@@ -495,6 +578,7 @@ if st.session_state.waiting_for_human:
             "Enter the human support response..."
         ),
     )
+
 
     if st.button(
         "Resume Workflow",
@@ -526,9 +610,11 @@ if st.session_state.waiting_for_human:
                         ),
                     )
 
+
                 response_text = result.get(
                     "response"
                 )
+
 
                 if response_text:
 
@@ -539,11 +625,13 @@ if st.session_state.waiting_for_human:
                         }
                     )
 
+
                 st.session_state.waiting_for_human = False
 
                 st.session_state.interrupt_data = None
 
                 st.rerun()
+
 
             except requests.RequestException as exc:
 
@@ -552,15 +640,16 @@ if st.session_state.waiting_for_human:
                 )
 
 
-# -----------------------------
+# ============================================================
 # Quick Support
-# -----------------------------
+# ============================================================
 
 if not st.session_state.waiting_for_human:
 
     st.markdown(
         "### Quick Support"
     )
+
 
     quick_messages = {
 
@@ -580,11 +669,14 @@ if not st.session_state.waiting_for_human:
             "I have a question about pricing.",
     }
 
+
     col1, col2, col3, col4, col5 = (
         st.columns(5)
     )
 
+
     selected_message = None
+
 
     with col1:
 
@@ -597,6 +689,7 @@ if not st.session_state.waiting_for_human:
                 "💳 Duplicate Charge"
             ]
 
+
     with col2:
 
         if st.button(
@@ -607,6 +700,7 @@ if not st.session_state.waiting_for_human:
             selected_message = quick_messages[
                 "🔐 Reset Password"
             ]
+
 
     with col3:
 
@@ -619,6 +713,7 @@ if not st.session_state.waiting_for_human:
                 "🔒 Account Locked"
             ]
 
+
     with col4:
 
         if st.button(
@@ -629,6 +724,7 @@ if not st.session_state.waiting_for_human:
             selected_message = quick_messages[
                 "🛠️ Technical Issue"
             ]
+
 
     with col5:
 
@@ -641,9 +737,15 @@ if not st.session_state.waiting_for_human:
                 "💰 Pricing"
             ]
 
+
+    # ----------------------------------------
+    # Chat Input
+    # ----------------------------------------
+
     customer_message = st.chat_input(
         "Describe your support issue..."
     )
+
 
     if customer_message:
 
@@ -653,6 +755,7 @@ if not st.session_state.waiting_for_human:
         )
 
         st.rerun()
+
 
     if selected_message:
 
