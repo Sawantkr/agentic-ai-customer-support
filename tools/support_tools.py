@@ -1,10 +1,14 @@
 import json
+import os
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
-API_BASE_URL = "http://127.0.0.1:8000"
+API_BASE_URL = os.getenv(
+    "API_BASE_URL",
+    f"http://127.0.0.1:{os.getenv('PORT', '8000')}",
+)
 
 
 # ==================================================
@@ -157,7 +161,8 @@ def check_ticket_status(ticket_id: str) -> dict:
             "message": "Ticket service is currently unavailable.",
         }
 
-        # ==================================================
+
+# ==================================================
 # SUBSCRIPTION TOOL
 # ==================================================
 
@@ -200,7 +205,8 @@ def check_subscription(subscription_id: str) -> dict:
             ),
         }
 
-        # ==================================================
+
+# ==================================================
 # CUSTOMER TOOL
 # ==================================================
 
