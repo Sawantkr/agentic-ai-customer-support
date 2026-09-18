@@ -28,6 +28,162 @@ st.set_page_config(
 
 
 # ============================================================
+# THEME-AWARE STYLING
+# ============================================================
+
+st.markdown(
+    """
+    <style>
+    :root {
+        --sf-red: #e50914;
+        --sf-red-hover: #b20710;
+        --sf-radius: 14px;
+    }
+
+    /* Main page width */
+    .block-container {
+        max-width: 1250px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Sawantflix logo */
+    .sf-logo {
+        text-align: center;
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: -2px;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .sf-logo-red {
+        color: var(--sf-red);
+    }
+
+    .sf-logo-light {
+        color: var(--text-color);
+    }
+
+    .sf-subtitle {
+        text-align: center;
+        color: var(--text-color);
+        opacity: 0.65;
+        font-size: 17px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .sf-description {
+        text-align: center;
+        color: var(--text-color);
+        opacity: 0.58;
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+
+    /* Support section */
+    .agent-title {
+        text-align: center;
+        color: var(--text-color);
+        font-size: 38px;
+        font-weight: 800;
+        margin-top: 4px;
+        margin-bottom: 6px;
+    }
+
+    .agent-subtitle {
+        text-align: center;
+        color: var(--text-color);
+        opacity: 0.58;
+        font-size: 14px;
+        margin-bottom: 22px;
+    }
+
+    .headset {
+        margin-right: 8px;
+    }
+
+    /* Quick support card */
+    .quick-card {
+        background: var(--secondary-background-color);
+        border: 1px solid rgba(128, 128, 128, 0.18);
+        border-radius: 16px;
+        padding: 18px 18px 8px 18px;
+        margin-top: 8px;
+        margin-bottom: 18px;
+    }
+
+    .quick-title {
+        color: var(--text-color);
+        font-size: 23px;
+        font-weight: 750;
+        margin-bottom: 12px;
+    }
+
+    /* Sidebar */
+    .sidebar-logo {
+        text-align: center;
+        padding: 8px 0 16px 0;
+    }
+
+    .sidebar-logo-text {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -1.5px;
+    }
+
+    .sidebar-subtitle {
+        color: var(--text-color);
+        opacity: 0.58;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    /* Sawantflix info card */
+    .sf-help-card {
+        border: 1px solid rgba(229, 9, 20, 0.35);
+        border-radius: 14px;
+        padding: 14px;
+        margin-top: 12px;
+        background: rgba(229, 9, 20, 0.06);
+    }
+
+    .sf-help-title {
+        color: var(--sf-red);
+        font-weight: 800;
+        font-size: 15px;
+        margin-bottom: 5px;
+    }
+
+    .sf-help-text {
+        color: var(--text-color);
+        opacity: 0.7;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    /* Center launch button */
+    .launch-area {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    /* Hide unnecessary Streamlit decoration */
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ============================================================
 # SESSION STATE
 # ============================================================
 
@@ -117,9 +273,11 @@ def process_customer_message(
     )
 
     try:
+
         with st.spinner(
             "Processing support request..."
         ):
+
             result = submit_support_request(
                 api_url=api_url,
                 thread_id=st.session_state.thread_id,
@@ -173,14 +331,12 @@ with st.sidebar:
     # --------------------------------------------------------
 
     st.markdown(
-        '<div style="text-align:center; padding:12px 0 18px 0;">'
-        '<div style="font-size:30px; font-weight:900; '
-        'letter-spacing:-1px; line-height:1.1;">'
+        '<div class="sidebar-logo">'
+        '<div class="sidebar-logo-text">'
         '<span style="color:#e50914;">SAWANT</span>'
-        '<span style="color:#ffffff;">FLIX</span>'
+        '<span style="color:var(--text-color);">FLIX</span>'
         '</div>'
-        '<div style="font-size:13px; color:#aaaaaa; '
-        'margin-top:6px;">'
+        '<div class="sidebar-subtitle">'
         'Customer Support Agent'
         '</div>'
         '</div>',
@@ -204,7 +360,9 @@ with st.sidebar:
         "Start New Conversation",
         use_container_width=True,
     ):
+
         start_new_conversation()
+
         st.rerun()
 
 
@@ -238,17 +396,18 @@ with st.sidebar:
     )
 
 
-    st.divider()
-
-
     # --------------------------------------------------------
-    # HELP
+    # HELP CARD
     # --------------------------------------------------------
 
-    st.info(
-        "🎧 **Need Help?**\n\n"
-        "This is the AI customer support "
-        "service for Sawantflix."
+    st.markdown(
+        '<div class="sf-help-card">'
+        '<div class="sf-help-title">🎧 Need Help?</div>'
+        '<div class="sf-help-text">'
+        'This is the AI customer support service for Sawantflix.'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
 
@@ -257,24 +416,20 @@ with st.sidebar:
 # ============================================================
 
 st.markdown(
-    '<div style="text-align:center; padding:8px 0 4px 0;">'
-    '<div style="font-size:38px; font-weight:900; '
-    'letter-spacing:-1.5px; line-height:1.1;">'
-    '<span style="color:#e50914;">SAWANT</span>'
-    '<span style="color:#ffffff;">FLIX</span>'
-    '</div>'
-    '<div style="font-size:18px; font-weight:600; '
-    'color:#aaaaaa; margin-top:7px;">'
-    'Customer Support'
-    '</div>'
+    '<div class="sf-logo">'
+    '<span class="sf-logo-red">SAWANT</span>'
+    '<span class="sf-logo-light">FLIX</span>'
     '</div>',
     unsafe_allow_html=True,
 )
 
+st.markdown(
+    '<div class="sf-subtitle">Customer Support</div>',
+    unsafe_allow_html=True,
+)
 
 st.markdown(
-    '<div style="text-align:center; color:#aaaaaa; '
-    'font-size:14px; margin-bottom:18px;">'
+    '<div class="sf-description">'
     'Official AI support for your Sawantflix experience.'
     '</div>',
     unsafe_allow_html=True,
@@ -285,11 +440,12 @@ st.markdown(
 # OPEN SAWANTFLIX
 # ------------------------------------------------------------
 
-button_col_left, button_col, button_col_right = st.columns(
+launch_left, launch_center, launch_right = st.columns(
     [1, 1, 1]
 )
 
-with button_col:
+with launch_center:
+
     st.link_button(
         "🎬 Open Sawantflix ↗",
         SAWANTFLIX_URL,
@@ -304,13 +460,20 @@ st.divider()
 # CUSTOMER SUPPORT AGENT
 # ============================================================
 
-st.title(
-    "🎧 Customer Support Agent"
+st.markdown(
+    '<div class="agent-title">'
+    '<span class="headset">🎧</span>'
+    'Customer Support Agent'
+    '</div>',
+    unsafe_allow_html=True,
 )
 
-st.caption(
-    "LangGraph-powered customer support with hybrid routing, "
-    "specialized workflows, persistence, and human escalation."
+st.markdown(
+    '<div class="agent-subtitle">'
+    'LangGraph-powered customer support with hybrid routing, '
+    'specialized workflows, persistence, and human escalation.'
+    '</div>',
+    unsafe_allow_html=True,
 )
 
 
@@ -375,11 +538,13 @@ if st.session_state.waiting_for_human:
             ),
         )
 
+
         diagnostic_result = (
             interrupt_data.get(
                 "diagnostic_result"
             )
         )
+
 
         if diagnostic_result:
 
@@ -468,28 +633,12 @@ if st.session_state.waiting_for_human:
 
 if not st.session_state.waiting_for_human:
 
-    st.subheader(
-        "Quick Support"
+    st.markdown(
+        '<div class="quick-card">'
+        '<div class="quick-title">⚡ Quick Support</div>'
+        '</div>',
+        unsafe_allow_html=True,
     )
-
-
-    quick_messages = {
-
-        "💳 Duplicate Charge":
-            "I was charged twice for my subscription.",
-
-        "🔐 Reset Password":
-            "I want to reset my password.",
-
-        "🔒 Account Locked":
-            "My account is locked and I cannot login.",
-
-        "🛠️ Technical Issue":
-            "My application is not working.",
-
-        "💰 Pricing":
-            "I have a question about pricing.",
-    }
 
 
     col1, col2, col3, col4, col5 = (
@@ -511,9 +660,9 @@ if not st.session_state.waiting_for_human:
             use_container_width=True,
         ):
 
-            selected_message = quick_messages[
-                "💳 Duplicate Charge"
-            ]
+            selected_message = (
+                "I was charged twice for my subscription."
+            )
 
 
     # --------------------------------------------------------
@@ -527,9 +676,9 @@ if not st.session_state.waiting_for_human:
             use_container_width=True,
         ):
 
-            selected_message = quick_messages[
-                "🔐 Reset Password"
-            ]
+            selected_message = (
+                "I want to reset my password."
+            )
 
 
     # --------------------------------------------------------
@@ -543,9 +692,9 @@ if not st.session_state.waiting_for_human:
             use_container_width=True,
         ):
 
-            selected_message = quick_messages[
-                "🔒 Account Locked"
-            ]
+            selected_message = (
+                "My account is locked and I cannot login."
+            )
 
 
     # --------------------------------------------------------
@@ -559,9 +708,9 @@ if not st.session_state.waiting_for_human:
             use_container_width=True,
         ):
 
-            selected_message = quick_messages[
-                "🛠️ Technical Issue"
-            ]
+            selected_message = (
+                "My application is not working."
+            )
 
 
     # --------------------------------------------------------
@@ -575,9 +724,9 @@ if not st.session_state.waiting_for_human:
             use_container_width=True,
         ):
 
-            selected_message = quick_messages[
-                "💰 Pricing"
-            ]
+            selected_message = (
+                "I have a question about pricing."
+            )
 
 
     # ========================================================
