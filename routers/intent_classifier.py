@@ -9,6 +9,9 @@ INTENT_KEYWORDS: dict[SupportIntent, tuple[str, ...]] = {
         "refund",
         "invoice",
         "billing",
+        "subscription",
+        "subscribed",
+        "plan",
     ),
     "technical": (
         "error",
