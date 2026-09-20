@@ -11,3 +11,4 @@ uvicorn
 streamlit
 requests
 psycopg[binary,pool]
+firebase-admin
