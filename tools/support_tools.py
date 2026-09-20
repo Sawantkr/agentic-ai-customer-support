@@ -19,8 +19,15 @@ SAWANTFLIX_API_BASE_URL = os.getenv(
     "http://localhost:5000",
 )
 
-SAWANTFLIX_SUPPORT_API_KEY = os.getenv(
-    "SAWANTFLIX_SUPPORT_API_KEY"
+# Supports both local and Render environment variable names.
+# Local:
+# SAWANTFLIX_SUPPORT_API_KEY
+#
+# Render:
+# SUPPORT_API_KEY
+SAWANTFLIX_SUPPORT_API_KEY = (
+    os.getenv("SAWANTFLIX_SUPPORT_API_KEY")
+    or os.getenv("SUPPORT_API_KEY")
 )
 
 
@@ -43,6 +50,7 @@ def check_payment(payment_id: str) -> dict:
     except HTTPError as error:
 
         if error.code == 404:
+
             return {
                 "success": False,
                 "message": (
@@ -86,6 +94,7 @@ def check_order(order_id: str) -> dict:
     except HTTPError as error:
 
         if error.code == 404:
+
             return {
                 "success": False,
                 "message": (
@@ -179,6 +188,7 @@ def check_ticket_status(ticket_id: str) -> dict:
     except HTTPError as error:
 
         if error.code == 404:
+
             return {
                 "success": False,
                 "message": (
@@ -222,6 +232,7 @@ def check_subscription(subscription_id: str) -> dict:
     except HTTPError as error:
 
         if error.code == 404:
+
             return {
                 "success": False,
                 "message": (
@@ -272,6 +283,23 @@ def check_customer(firebase_uid: str) -> dict:
         }
 
     # ----------------------------------------------
+    # Check Firebase UID
+    # ----------------------------------------------
+
+    if not firebase_uid:
+
+        print(
+            "Firebase UID is missing"
+        )
+
+        return {
+            "success": False,
+            "message": (
+                "Firebase customer identity is missing."
+            ),
+        }
+
+    # ----------------------------------------------
     # Build Sawantflix customer API URL
     # ----------------------------------------------
 
@@ -280,16 +308,23 @@ def check_customer(firebase_uid: str) -> dict:
         f"/api/support/customer/{firebase_uid}"
     )
 
-    # Do NOT print the API key.
+    # ----------------------------------------------
+    # Safe logs
+    # ----------------------------------------------
+
     print(
-        f"Calling Sawantflix customer API: "
+        "Calling Sawantflix customer API: "
         f"{SAWANTFLIX_API_BASE_URL}"
     )
 
-    # We only log whether a Firebase UID was received.
     print(
-        f"Firebase UID received: "
+        "Firebase UID received: "
         f"{bool(firebase_uid)}"
+    )
+
+    print(
+        "Sawantflix support API key configured: "
+        f"{bool(SAWANTFLIX_SUPPORT_API_KEY)}"
     )
 
     # ----------------------------------------------
@@ -333,7 +368,7 @@ def check_customer(firebase_uid: str) -> dict:
     except HTTPError as error:
 
         print(
-            f"Sawantflix customer API returned "
+            "Sawantflix customer API returned "
             f"HTTP {error.code}"
         )
 
