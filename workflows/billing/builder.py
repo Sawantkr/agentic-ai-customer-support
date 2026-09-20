@@ -2,6 +2,8 @@ from langgraph.graph import StateGraph, START, END
 
 from graph.state import SupportState
 
+from tools.support_tools import check_customer
+
 from nodes.billing_nodes import (
     handle_duplicate_charge,
     handle_refund_request,
@@ -21,13 +23,54 @@ BILLING_PATH_MAP = {
 }
 
 
+def load_customer_data(state: SupportState) -> dict:
+    """
+    Fetch the authenticated customer's Sawantflix
+    subscription and payment information.
+    """
+
+    firebase_uid = state.get("firebase_uid")
+
+    if not firebase_uid:
+        return {
+            "customer_data": {
+                "success": False,
+                "message": "Customer identity is missing.",
+            }
+        }
+
+    customer_result = check_customer(firebase_uid)
+
+    return {
+        "customer_data": customer_result
+    }
+
+
 def build_billing_graph():
+
     builder = StateGraph(SupportState)
+
+    # ==============================================
+    # LOAD CUSTOMER DATA
+    # ==============================================
+
+    builder.add_node(
+        "load_customer_data",
+        load_customer_data,
+    )
+
+    # ==============================================
+    # BILLING CLASSIFIER
+    # ==============================================
 
     builder.add_node(
         "classify_billing_issue",
         classify_billing_issue,
     )
+
+    # ==============================================
+    # BILLING HANDLERS
+    # ==============================================
 
     builder.add_node(
         "handle_duplicate_charge",
@@ -49,8 +92,17 @@ def build_billing_graph():
         handle_other_billing,
     )
 
+    # ==============================================
+    # FLOW
+    # ==============================================
+
     builder.add_edge(
         START,
+        "load_customer_data",
+    )
+
+    builder.add_edge(
+        "load_customer_data",
         "classify_billing_issue",
     )
 
@@ -60,9 +112,28 @@ def build_billing_graph():
         BILLING_PATH_MAP,
     )
 
-    builder.add_edge("handle_duplicate_charge", END)
-    builder.add_edge("handle_refund_request", END)
-    builder.add_edge("handle_payment_failure", END)
-    builder.add_edge("handle_other_billing", END)
+    # ==============================================
+    # END
+    # ==============================================
+
+    builder.add_edge(
+        "handle_duplicate_charge",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_refund_request",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_payment_failure",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_other_billing",
+        END,
+    )
 
     return builder.compile()

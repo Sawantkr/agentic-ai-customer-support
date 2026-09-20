@@ -2,6 +2,8 @@ from langgraph.graph import END, START, StateGraph
 
 from graph.state import SupportState
 
+from tools.support_tools import check_customer
+
 from nodes.account_nodes import (
     handle_account_deletion,
     handle_account_management,
@@ -25,13 +27,50 @@ ACCOUNT_PATH_MAP = {
 }
 
 
+def load_customer_data(state: SupportState) -> dict:
+
+    firebase_uid = state.get("firebase_uid")
+
+    if not firebase_uid:
+        return {
+            "customer_data": {
+                "success": False,
+                "message": "Customer identity is missing.",
+            }
+        }
+
+    customer_result = check_customer(firebase_uid)
+
+    return {
+        "customer_data": customer_result,
+    }
+
+
 def build_account_graph():
+
     builder = StateGraph(SupportState)
+
+    # --------------------------------------------------
+    # Customer identity / data
+    # --------------------------------------------------
+
+    builder.add_node(
+        "load_customer_data",
+        load_customer_data,
+    )
+
+    # --------------------------------------------------
+    # Account classification
+    # --------------------------------------------------
 
     builder.add_node(
         "classify_account_issue",
         classify_account_issue,
     )
+
+    # --------------------------------------------------
+    # Account handlers
+    # --------------------------------------------------
 
     builder.add_node(
         "handle_login_problem",
@@ -63,8 +102,17 @@ def build_account_graph():
         handle_other_account,
     )
 
+    # --------------------------------------------------
+    # Flow
+    # --------------------------------------------------
+
     builder.add_edge(
         START,
+        "load_customer_data",
+    )
+
+    builder.add_edge(
+        "load_customer_data",
         "classify_account_issue",
     )
 
@@ -74,11 +122,38 @@ def build_account_graph():
         ACCOUNT_PATH_MAP,
     )
 
-    builder.add_edge("handle_login_problem", END)
-    builder.add_edge("handle_password_reset", END)
-    builder.add_edge("handle_account_management", END)
-    builder.add_edge("handle_suspicious_access", END)
-    builder.add_edge("handle_account_deletion", END)
-    builder.add_edge("handle_other_account", END)
+    # --------------------------------------------------
+    # Endpoints
+    # --------------------------------------------------
+
+    builder.add_edge(
+        "handle_login_problem",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_password_reset",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_account_management",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_suspicious_access",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_account_deletion",
+        END,
+    )
+
+    builder.add_edge(
+        "handle_other_account",
+        END,
+    )
 
     return builder.compile()

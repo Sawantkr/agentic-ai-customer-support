@@ -10,6 +10,15 @@ API_BASE_URL = os.getenv(
     f"http://127.0.0.1:{os.getenv('PORT', '8000')}",
 )
 
+SAWANTFLIX_API_BASE_URL = os.getenv(
+    "SAWANTFLIX_API_BASE_URL",
+    "http://localhost:5000",
+)
+
+SAWANTFLIX_SUPPORT_API_KEY = os.getenv(
+    "SAWANTFLIX_SUPPORT_API_KEY"
+)
+
 
 # ==================================================
 # PAYMENT TOOL
@@ -210,32 +219,63 @@ def check_subscription(subscription_id: str) -> dict:
 # CUSTOMER TOOL
 # ==================================================
 
-def check_customer(customer_id: str) -> dict:
+def check_customer(firebase_uid: str) -> dict:
 
-    url = f"{API_BASE_URL}/customers/{customer_id}"
+    if not SAWANTFLIX_SUPPORT_API_KEY:
+        return {
+            "success": False,
+            "message": (
+                "Sawantflix support API key is not configured."
+            ),
+        }
+
+    url = (
+        f"{SAWANTFLIX_API_BASE_URL}"
+        f"/api/support/customer/{firebase_uid}"
+    )
+
+    request = Request(
+        url,
+        headers={
+            "x-support-api-key": SAWANTFLIX_SUPPORT_API_KEY,
+        },
+        method="GET",
+    )
 
     try:
 
-        with urlopen(url, timeout=5) as response:
-            return json.loads(
+        with urlopen(request, timeout=5) as response:
+
+            data = json.loads(
                 response.read().decode("utf-8")
             )
+
+            return {
+                "success": True,
+                "data": data,
+            }
 
     except HTTPError as error:
 
         if error.code == 404:
             return {
                 "success": False,
+                "message": "Customer not found in Sawantflix.",
+            }
+
+        if error.code == 401:
+            return {
+                "success": False,
                 "message": (
-                    f"No customer found with ID "
-                    f"{customer_id}."
+                    "Unauthorized request to "
+                    "Sawantflix support API."
                 ),
             }
 
         return {
             "success": False,
             "message": (
-                f"Customer API returned "
+                f"Sawantflix Customer API returned "
                 f"HTTP {error.code}."
             ),
         }
@@ -245,6 +285,7 @@ def check_customer(customer_id: str) -> dict:
         return {
             "success": False,
             "message": (
-                "Customer service is currently unavailable."
+                "Sawantflix customer service is "
+                "currently unavailable."
             ),
         }

@@ -19,6 +19,14 @@ else:
         "http://127.0.0.1:8000",
     )
 
+# Temporary local testing:
+# Put your Firebase UID in the environment variable
+# SAWANTFLIX_FIREBASE_UID.
+FIREBASE_UID = os.getenv(
+    "SAWANTFLIX_FIREBASE_UID",
+    "",
+)
+
 
 st.set_page_config(
     page_title="Sawantflix Customer Support",
@@ -211,6 +219,7 @@ def submit_support_request(
     api_url,
     thread_id,
     message,
+    firebase_uid,
 ):
 
     response = requests.post(
@@ -218,6 +227,7 @@ def submit_support_request(
         json={
             "thread_id": thread_id,
             "message": message,
+            "firebase_uid": firebase_uid,
         },
         timeout=120,
     )
@@ -276,6 +286,20 @@ def process_customer_message(
         }
     )
 
+    # ---------------------------------------------
+    # CHECK FIREBASE UID
+    # ---------------------------------------------
+
+    if not FIREBASE_UID:
+
+        st.error(
+            "Firebase UID is not configured. "
+            "Please set SAWANTFLIX_FIREBASE_UID "
+            "in the environment variables."
+        )
+
+        return
+
     try:
 
         with st.spinner(
@@ -286,6 +310,7 @@ def process_customer_message(
                 api_url,
                 st.session_state.thread_id,
                 customer_message,
+                FIREBASE_UID,
             )
 
         if result.get("status") == "completed":
@@ -385,6 +410,25 @@ with st.sidebar:
         "API URL",
         value=DEFAULT_API_URL,
     )
+
+
+    # --------------------------------------------------------
+    # CUSTOMER ID STATUS
+    # --------------------------------------------------------
+
+    st.subheader("Customer Identity")
+
+    if FIREBASE_UID:
+
+        st.success(
+            "Firebase customer identity connected."
+        )
+
+    else:
+
+        st.warning(
+            "Firebase customer identity is not configured."
+        )
 
 
     # --------------------------------------------------------
@@ -512,11 +556,9 @@ if st.session_state.waiting_for_human:
         or {}
     )
 
-
     st.warning(
         "This request requires human support review."
     )
-
 
     with st.expander(
         "View escalation details",
@@ -600,11 +642,9 @@ if st.session_state.waiting_for_human:
                         human_response.strip(),
                     )
 
-
                 response_text = result.get(
                     "response"
                 )
-
 
                 if response_text:
 
@@ -614,7 +654,6 @@ if st.session_state.waiting_for_human:
                             "content": response_text,
                         }
                     )
-
 
                 st.session_state.waiting_for_human = False
 
@@ -640,11 +679,9 @@ if not st.session_state.waiting_for_human:
         "⚡ Quick Support"
     )
 
-
     col1, col2, col3, col4, col5 = (
         st.columns(5)
     )
-
 
     selected_message = None
 

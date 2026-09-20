@@ -4,13 +4,50 @@ from graph.state import SupportState
 
 
 # ==================================================
+# BILLING / ACCOUNT SUPPORT PATTERNS
+# ==================================================
+
+BILLING_SUPPORT_PATTERNS = [
+    "subscription",
+    "subscription plan",
+    "current plan",
+    "my plan",
+    "payment status",
+    "payment details",
+    "recent payment",
+    "billing",
+    "charged",
+    "charge",
+    "payment failed",
+    "payment failure",
+    "duplicate payment",
+    "duplicate charge",
+    "refund",
+    "refund request",
+]
+
+
+# ==================================================
+# GENERAL PRODUCT SUPPORT PATTERNS
+# ==================================================
+
+GENERAL_PRODUCT_PATTERNS = [
+    "what is sawantflix",
+    "what is this platform",
+    "what is this product",
+    "what does sawantflix do",
+    "what does sawantflix offer",
+    "about sawantflix",
+    "tell me about sawantflix",
+]
+
+
+# ==================================================
 # REAL-TIME TOOL PATTERNS
 # ==================================================
 
 REALTIME_TOOL_PATTERNS = [
     "check payment",
-    "payment status",
-    "payment details",
     "check order",
     "order status",
     "where is my order",
@@ -77,7 +114,23 @@ def route_knowledge_question(state: SupportState) -> str:
         return "tool"
 
     # --------------------------------------------------
-    # Real-time support requests
+    # Billing / subscription support
+    # --------------------------------------------------
+
+    for pattern in BILLING_SUPPORT_PATTERNS:
+        if pattern in message:
+            return "support"
+
+    # --------------------------------------------------
+    # General product support
+    # --------------------------------------------------
+
+    for pattern in GENERAL_PRODUCT_PATTERNS:
+        if pattern in message:
+            return "support"
+
+    # --------------------------------------------------
+    # Other real-time support requests
     # --------------------------------------------------
 
     for pattern in REALTIME_TOOL_PATTERNS:

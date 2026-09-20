@@ -1,7 +1,8 @@
-from typing import Literal, TypedDict
-from typing import Annotated
+from typing import Literal, TypedDict, Annotated
+
 from langgraph.graph.message import add_messages
 from langchain_core.messages import AnyMessage
+
 
 SupportIntent = Literal[
     "billing",
@@ -34,6 +35,7 @@ TechnicalIssue = Literal[
     "other_technical",
 ]
 
+
 AccountIssue = Literal[
     "login_problem",
     "password_reset",
@@ -56,11 +58,13 @@ EscalationReason = Literal[
     "unsupported_request",
 ]
 
+
 GeneralIssue = Literal[
     "pricing_question",
     "product_question",
     "other_general",
 ]
+
 
 ErrorType = Literal[
     "llm_routing_error",
@@ -70,30 +74,79 @@ ErrorType = Literal[
 
 
 class SupportState(TypedDict, total=False):
+
+    # ==================================================
+    # CUSTOMER
+    # ==================================================
+
+    firebase_uid: str
+
+    customer_data: dict
+
+    # ==================================================
+    # CUSTOMER MESSAGE
+    # ==================================================
+
     customer_message: str
     processed_message: str
+
+    # ==================================================
+    # ROUTING
+    # ==================================================
 
     intent: SupportIntent
     routing_source: RoutingSource
     needs_llm_routing: bool
 
+    # ==================================================
+    # BILLING
+    # ==================================================
+
     billing_issue: BillingIssue
+
+    # ==================================================
+    # TECHNICAL
+    # ==================================================
 
     technical_issue: TechnicalIssue
     diagnostic_result: str
     resolution_status: ResolutionStatus
 
+    # ==================================================
+    # ESCALATION
+    # ==================================================
+
     escalation_required: bool
     escalation_reason: EscalationReason
 
+    # ==================================================
+    # ACCOUNT
+    # ==================================================
+
     account_issue: AccountIssue
 
+    # ==================================================
+    # GENERAL
+    # ==================================================
+
     general_issue: GeneralIssue
+
+    # ==================================================
+    # ERROR HANDLING
+    # ==================================================
 
     error_occurred: bool
     error_type: ErrorType
     error_message: str
 
+    # ==================================================
+    # MESSAGES
+    # ==================================================
+
     messages: Annotated[list[AnyMessage], add_messages]
+
+    # ==================================================
+    # FINAL RESPONSE
+    # ==================================================
 
     response: str
