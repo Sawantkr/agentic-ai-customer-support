@@ -289,6 +289,14 @@ def handle_payment_failure(
 def handle_other_billing(
     state: SupportState,
 ) -> dict:
+    """
+    Handle billing questions that do not belong
+    to duplicate charge, refund, or payment failure.
+
+    The response is selected according to the
+    customer's exact question so that we do not
+    return unrelated subscription/payment data.
+    """
 
     if not customer_data_available(state):
 
@@ -316,17 +324,273 @@ def handle_other_billing(
         "latestPayment",
     )
 
-    # ==================================================
-    # CUSTOMER
-    # ==================================================
-
     customer_name = (
         customer.get("name")
         or "there"
     )
 
     # ==================================================
-    # SUBSCRIPTION
+    # READ THE ORIGINAL USER QUESTION
+    # ==================================================
+
+    message = (
+        state.get(
+            "processed_message",
+            "",
+        )
+        or state.get(
+            "customer_message",
+            "",
+        )
+    ).lower().strip()
+
+    # ==================================================
+    # CURRENT PLAN
+    # ==================================================
+
+    current_plan_question = any(
+        phrase in message
+        for phrase in (
+            "what is my current plan",
+            "what's my current plan",
+            "what is my plan",
+            "what's my plan",
+            "my current plan",
+            "my plan",
+            "which plan am i on",
+            "which plan am i subscribed to",
+        )
+    )
+
+    if current_plan_question:
+
+        if not subscription:
+
+            return {
+                "response": (
+                    "You currently do not have "
+                    "an active subscription."
+                ),
+                "resolution_status": "resolved",
+                "escalation_required": False,
+            }
+
+        plan = subscription.get("plan")
+        status = subscription.get("status")
+
+        if plan:
+
+            return {
+                "response": (
+                    f"Your current Sawantflix plan is "
+                    f"{plan}. Your subscription status is "
+                    f"{status}."
+                ),
+                "resolution_status": "resolved",
+                "escalation_required": False,
+            }
+
+        return {
+            "response": (
+                "Your Sawantflix subscription plan "
+                "could not be determined."
+            ),
+            "resolution_status": "resolved",
+            "escalation_required": False,
+        }
+
+    # ==================================================
+    # SUBSCRIPTION STATUS
+    # ==================================================
+
+    subscription_status_question = any(
+        phrase in message
+        for phrase in (
+            "is my subscription active",
+            "is my subscription still active",
+            "is my subscription active?",
+            "subscription status",
+            "what is my subscription status",
+            "what's my subscription status",
+            "am i subscribed",
+            "am i currently subscribed",
+        )
+    )
+
+    if subscription_status_question:
+
+        if not subscription:
+
+            return {
+                "response": (
+                    "You currently do not have "
+                    "a subscription record."
+                ),
+                "resolution_status": "resolved",
+                "escalation_required": False,
+            }
+
+        status = subscription.get(
+            "status"
+        )
+
+        if status:
+
+            return {
+                "response": (
+                    f"Your Sawantflix subscription is "
+                    f"{status}."
+                ),
+                "resolution_status": "resolved",
+                "escalation_required": False,
+            }
+
+        return {
+            "response": (
+                "I could not determine your "
+                "subscription status."
+            ),
+            "resolution_status": "resolved",
+            "escalation_required": False,
+        }
+
+    # ==================================================
+    # SUBSCRIPTION EXPIRY
+    # ==================================================
+
+    expiry_question = any(
+        phrase in message
+        for phrase in (
+            "when does my subscription expire",
+            "when will my subscription expire",
+            "when is my subscription expiring",
+            "subscription expiry",
+            "subscription expiration",
+            "when does my plan expire",
+            "when will my plan expire",
+            "when is my plan expiring",
+            "when does my subscription end",
+            "when will my subscription end",
+        )
+    )
+
+    if expiry_question:
+
+        if not subscription:
+
+            return {
+                "response": (
+                    "You currently do not have "
+                    "a subscription record."
+                ),
+                "resolution_status": "resolved",
+                "escalation_required": False,
+            }
+
+        end_date = subscription.get(
+            "end_date"
+        )
+
+        if end_date:
+
+            return {
+                "response": (
+                    f"Your Sawantflix subscription is "
+                    f"valid until {end_date}."
+                ),
+                "resolution_status": "resolved",
+                "escalation_required": False,
+            }
+
+        return {
+            "response": (
+                "I could not determine your "
+                "subscription expiry date."
+            ),
+            "resolution_status": "resolved",
+            "escalation_required": False,
+        }
+
+    # ==================================================
+    # LATEST PAYMENT
+    # ==================================================
+
+    latest_payment_question = any(
+        phrase in message
+        for phrase in (
+            "what is my latest payment",
+            "what's my latest payment",
+            "show my latest payment",
+            "my latest payment",
+            "what is my last payment",
+            "what's my last payment",
+            "show my last payment",
+            "my last payment",
+            "what was my recent payment",
+            "what is my recent payment",
+            "show my recent payment",
+            "recent payment",
+        )
+    )
+
+    if latest_payment_question:
+
+        if not latest_payment:
+
+            return {
+                "response": (
+                    "I could not find a payment record "
+                    "for your Sawantflix account."
+                ),
+                "resolution_status": "resolved",
+                "escalation_required": False,
+            }
+
+        payment_status = latest_payment.get(
+            "status"
+        )
+
+        payment_amount = latest_payment.get(
+            "amount"
+        )
+
+        payment_id = latest_payment.get(
+            "razorpay_payment_id"
+        )
+
+        payment_text = (
+            "Your latest payment"
+        )
+
+        if payment_amount is not None:
+
+            payment_text += (
+                f" was ₹{payment_amount}"
+            )
+
+        if payment_status:
+
+            payment_text += (
+                f" and its status is "
+                f"{payment_status}"
+            )
+
+        if payment_id:
+
+            payment_text += (
+                f". Payment ID: {payment_id}"
+            )
+
+        payment_text += "."
+
+        return {
+            "response": payment_text,
+            "resolution_status": "resolved",
+            "escalation_required": False,
+        }
+
+    # ==================================================
+    # GENERIC BILLING QUESTION
     # ==================================================
 
     if subscription:
@@ -335,7 +599,7 @@ def handle_other_billing(
             "plan"
         )
 
-        subscription_status = subscription.get(
+        status = subscription.get(
             "status"
         )
 
@@ -348,9 +612,8 @@ def handle_other_billing(
         )
 
         subscription_text = (
-            f"Your current subscription plan is "
-            f"{plan} with status "
-            f"{subscription_status}."
+            f"Your current Sawantflix plan is "
+            f"{plan} with status {status}."
         )
 
         if amount is not None:
@@ -372,10 +635,6 @@ def handle_other_billing(
             "You currently do not have "
             "a subscription record."
         )
-
-    # ==================================================
-    # PAYMENT
-    # ==================================================
 
     if latest_payment:
 
@@ -415,10 +674,6 @@ def handle_other_billing(
         payment_text = (
             "No payment record was found."
         )
-
-    # ==================================================
-    # FINAL RESPONSE
-    # ==================================================
 
     return {
         "response": (

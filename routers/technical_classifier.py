@@ -9,13 +9,21 @@ TECHNICAL_KEYWORDS: dict[TechnicalIssue, tuple[str, ...]] = {
         "blank screen",
         "exception",
     ),
+
     "performance_issue": (
         "slow",
         "lag",
         "lagging",
         "freezing",
         "takes too long",
+        "not playing",
+        "won't play",
+        "doesn't play",
+        "does not play",
+        "video not playing",
+        "movie not playing",
     ),
+
     "feature_issue": (
         "button doesn't work",
         "button does not work",
@@ -25,6 +33,7 @@ TECHNICAL_KEYWORDS: dict[TechnicalIssue, tuple[str, ...]] = {
         "unable to upload",
         "cannot upload",
     ),
+
     "other_technical": (),
 }
 

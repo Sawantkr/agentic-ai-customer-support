@@ -12,5 +12,11 @@ Customers can contact support for questions about charges, duplicate charges, re
 Technical Issues:
 Customers experiencing application errors, crashes, or other technical problems should provide details about the issue and any error messages.
 
-Pricing:
-Customers can contact support for information about available plans, pricing, and product features.
+Pricing and Subscription Plans:
+Sawantflix offers subscription plans for accessing premium streaming content.
+
+Basic Plan:
+The Basic plan costs ₹19 per month.
+The Basic plan provides access to the available Sawantflix streaming content.
+
+Customers can contact support for information about available plans, pricing, subscription status, payments, and product features.
