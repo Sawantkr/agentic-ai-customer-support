@@ -1,87 +1,147 @@
 from pathlib import Path
-from collections import Counter
-import math
-import re
 
 from langchain_core.documents import Document
+from qdrant_client import QdrantClient, models
 
 from rag.loader import load_documents, split_documents
 
 
+# =========================
+# QDRANT CONFIGURATION
+# =========================
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+QDRANT_PATH = BASE_DIR / "qdrant_storage"
+COLLECTION_NAME = "customer_support_knowledge"
+
+# FastEmbed model used by Qdrant for semantic embeddings
+EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
+
+
+_qdrant_client = None
 _vector_store = None
 
 
-def _tokenize(text: str) -> list[str]:
-    return re.findall(r"\b[a-zA-Z0-9]+\b", text.lower())
+# =========================
+# QDRANT VECTOR STORE
+# =========================
 
-
-def _build_vector(document: Document) -> Counter:
-    return Counter(_tokenize(document.page_content))
-
-
-def _cosine_similarity(
-    query_vector: Counter,
-    document_vector: Counter,
-) -> float:
-    if not query_vector or not document_vector:
-        return 0.0
-
-    common_terms = set(query_vector) & set(document_vector)
-
-    dot_product = sum(
-        query_vector[term] * document_vector[term]
-        for term in common_terms
-    )
-
-    query_magnitude = math.sqrt(
-        sum(value * value for value in query_vector.values())
-    )
-
-    document_magnitude = math.sqrt(
-        sum(value * value for value in document_vector.values())
-    )
-
-    if query_magnitude == 0 or document_magnitude == 0:
-        return 0.0
-
-    return dot_product / (query_magnitude * document_magnitude)
-
-
-class LightweightVectorStore:
+class QdrantVectorStore:
     def __init__(self, documents: list[Document]):
         self.documents = documents
-        self.vectors = [_build_vector(document) for document in documents]
+
+        # Local persistent Qdrant database
+        self.client = QdrantClient(
+            path=str(QDRANT_PATH)
+        )
+
+        self._create_collection()
+        self._index_documents()
+
+    # -------------------------
+    # Create collection
+    # -------------------------
+
+    def _create_collection(self):
+        if not self.client.collection_exists(COLLECTION_NAME):
+            self.client.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=models.VectorParams(
+                    size=self.client.get_embedding_size(
+                        EMBEDDING_MODEL
+                    ),
+                    distance=models.Distance.COSINE,
+                ),
+            )
+
+    # -------------------------
+    # Store documents
+    # -------------------------
+
+    def _index_documents(self):
+        if not self.documents:
+            return
+
+        # Avoid rebuilding the collection every time
+        collection_info = self.client.get_collection(
+            collection_name=COLLECTION_NAME
+        )
+
+        existing_points = collection_info.points_count or 0
+
+        if existing_points > 0:
+            return
+
+        ids = list(range(len(self.documents)))
+
+        payload = []
+
+        for document in self.documents:
+            payload.append(
+                {
+                    "document": document.page_content,
+                    "metadata": document.metadata,
+                }
+            )
+
+        self.client.upload_collection(
+            collection_name=COLLECTION_NAME,
+            vectors=[
+                models.Document(
+                    text=document.page_content,
+                    model=EMBEDDING_MODEL,
+                )
+                for document in self.documents
+            ],
+            payload=payload,
+            ids=ids,
+        )
+
+    # -------------------------
+    # Semantic similarity search
+    # -------------------------
 
     def similarity_search(
         self,
         query: str,
         k: int = 2,
     ) -> list[Document]:
-        query_vector = Counter(_tokenize(query))
 
-        scored_documents = []
+        results = self.client.query_points(
+            collection_name=COLLECTION_NAME,
+            query=models.Document(
+                text=query,
+                model=EMBEDDING_MODEL,
+            ),
+            limit=k,
+            with_payload=True,
+        ).points
 
-        for document, document_vector in zip(
-            self.documents,
-            self.vectors,
-        ):
-            score = _cosine_similarity(
-                query_vector,
-                document_vector,
+        documents = []
+
+        for result in results:
+            payload = result.payload or {}
+
+            documents.append(
+                Document(
+                    page_content=payload.get(
+                        "document",
+                        ""
+                    ),
+                    metadata=payload.get(
+                        "metadata",
+                        {}
+                    ),
+                )
             )
 
-            scored_documents.append((score, document))
+        return documents
 
-        scored_documents.sort(
-            key=lambda item: item[0],
-            reverse=True,
-        )
 
-        return [
-            document
-            for score, document in scored_documents[:k]
-        ]
-
+# =========================
+# BUILD VECTOR STORE
+# =========================
 
 def build_vector_store():
     global _vector_store
@@ -89,10 +149,14 @@ def build_vector_store():
     documents = load_documents()
     chunks = split_documents(documents)
 
-    _vector_store = LightweightVectorStore(chunks)
+    _vector_store = QdrantVectorStore(chunks)
 
     return _vector_store
 
+
+# =========================
+# GET VECTOR STORE
+# =========================
 
 def get_vector_store():
     global _vector_store

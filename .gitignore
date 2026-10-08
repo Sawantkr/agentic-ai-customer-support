@@ -38,3 +38,5 @@ htmlcov/
 .agents/
 
 .streamlit/secrets.toml
+# Qdrant local vector database
+qdrant_storage/
